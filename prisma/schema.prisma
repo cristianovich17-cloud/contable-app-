@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Socio {
+  id        Int     @id @default(autoincrement())
+  numero    Int     @unique
+  nombre    String
+  email     String?
+  telefono  String?
+  estado    String  @default("activo") // "activo", "inactivo"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  descuentos    Descuento[]
+  creditos      Credito[]
+  pagos         Pago[]
+  recibos       Recibo[]
+  sentEmails    SentEmail[]
+
+  @@index([numero])
+  @@index([nombre])
+}
+
+model CuotaConfig {
+  id                Int     @id @default(autoincrement())
+  mes               Int
+  año               Int
+  cuotaBienestar    Float
+  cuotaOrdinaria    Float
+  cuotaSocioAFUT    Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([mes, año])
+  @@index([mes, año])
+}
+
+model Descuento {
+  id        Int     @id @default(autoincrement())
+  socioId   Int
+  socio     Socio   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  mes       Int
+  año       Int
+  monto     Float
+  concepto  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([socioId])
+  @@index([mes, año])
+  @@index([socioId, mes, año])
+}
+
+model Credito {
+  id            Int     @id @default(autoincrement())
+  socioId       Int
+  socio         Socio   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  monto         Float
+  concepto      String?
+  cuotasPagadas Int     @default(0)
+  estado        String  @default("pendiente") // "pendiente", "pagado", "cancelado"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pagos Pago[]
+
+  @@index([socioId])
+  @@index([estado])
+}
+
+model Pago {
+  id        Int     @id @default(autoincrement())
+  socioId   Int
+  socio     Socio   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  creditoId Int?
+  credito   Credito? @relation(fields: [creditoId], references: [id], onDelete: SetNull)
+  monto     Float
+  fecha     DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([socioId])
+  @@index([creditoId])
+}
+
+model Recibo {
+  id        Int     @id @default(autoincrement())
+  socioId   Int
+  socio     Socio   @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  mes       Int
+  año       Int
+  monto     Float
+  concepto  String?
+  pdfPath   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([socioId])
+  @@index([mes, año])
+}
+
+model Transaccion {
+  id        Int     @id @default(autoincrement())
+  tipo      String  // "ingreso" o "egreso"
+  categoria String
+  mes       Int
+  año       Int
+  monto     Float
+  concepto  String?
+  referencia String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comprobantes Comprobante[]
+
+  @@index([tipo])
+  @@index([categoria])
+  @@index([mes, año])
+  @@index([tipo, mes, año])
+}
+
+model Comprobante {
+  id               Int        @id @default(autoincrement())
+  transaccionId    Int
+  transaccion      Transaccion @relation(fields: [transaccionId], references: [id], onDelete: Cascade)
+  nombre           String     // Nombre original del archivo
+  ruta             String     // Ruta en servidor o URL (ej: /uploads/2025/comprobante_123.pdf)
+  tipoMIME         String     // Tipo MIME (application/pdf, image/png, etc)
+  tamaño           Int        // Tamaño en bytes
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([transaccionId])
+}
+
+model SentEmail {
+  id            Int     @id @default(autoincrement())
+  socioId       Int?
+  socio         Socio?  @relation(fields: [socioId], references: [id], onDelete: SetNull)
+  email         String
+  mes           Int
+  año           Int
+  asunto        String
+  processed     Boolean @default(false)
+  processedOk   Boolean @default(false)
+  lastError     String?
+  processedDate DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([socioId])
+  @@index([processed])
+  @@index([mes, año])
+  @@index([email])
+}
+
+// Usuarios y Autenticación (FASE 2)
+model Usuario {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  nombre        String
+  passwordHash  String    // bcrypt hash
+  rol           String    @default("visor") // "admin", "contador", "visor"
+  activo        Boolean   @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  auditLogs     AuditLog[]
+
+  @@index([email])
+  @@index([rol])
+}
+
+// Registro de auditoría (FASE 3)
+model AuditLog {
+  id            Int       @id @default(autoincrement())
+  usuarioId     Int
+  usuario       Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  accion        String    // "crear_transaccion", "actualizar_socio", "login", etc
+  tabla         String    // "Transaccion", "Socio", "Usuario", etc
+  registroId    Int?      // ID del registro afectado
+  cambioAnterior String?  // JSON con valores anteriores
+  cambioNuevo   String?   // JSON con valores nuevos
+  ip            String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+
+  @@index([usuarioId])
+  @@index([accion])
+  @@index([tabla])
+  @@index([createdAt])
+}

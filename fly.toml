@@ -1,0 +1,30 @@
+app = "contable-app-staging"
+kill_signal = "SIGINT"
+kill_timeout = 5
+[env]
+  NODE_ENV = "production"
+
+[build]
+  image = "dockerfile"
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls","http"]
+
+[checks]
+  [checks.status]
+  method = "GET"
+  path = "/api/hello"
+  protocol = "http"
+  timeout = "5s"
+  interval = "15s"
+  grace_period = "5s"

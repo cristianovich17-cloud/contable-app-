@@ -1,0 +1,1 @@
+{"ok":false,"error":"\nInvalid `prisma.cuotaConfig.findMany()` invocation:\n\n{\n  orderBy: {\n    año: \"asc\",\n    mes: \"asc\"\n  }\n  ~~~~~~~~~~~~\n}\n\nArgument `orderBy`: Invalid value provided. Expected CuotaConfigOrderByWithRelationInput[], provided Object."}
