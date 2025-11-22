@@ -201,6 +201,31 @@ npm run dev:worker   # Iniciar background worker
 
 ---
 
+## 🚀 Despliegue en Producción
+
+### Vercel (Recomendado - GRATUITO)
+
+```bash
+# 1. Push a GitHub
+git push origin main
+
+# 2. Ir a https://vercel.com y conectar tu repositorio
+# 3. Vercel despliega automáticamente cada push
+
+# Tu app estará en: https://contable-app.vercel.app
+```
+
+**Ventajas:**
+- ✅ Completamente GRATUITO (sin tarjeta de crédito)
+- ✅ Despliegue automático desde GitHub
+- ✅ Base de datos SQLite incluida
+- ✅ SSL/HTTPS automático
+- ✅ Performance optimizado
+
+Ver detalles: `QUICK_DEPLOY.md` o `VERCEL_DEPLOYMENT_GUIDE.md`
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Error: "database.db is locked"
