@@ -1,8 +1,8 @@
-name: Vercel Deploy
+name: Vercel Deploy (DISABLED - using Fly.io instead)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ disabled-branch ]
 
 jobs:
   deploy:
