@@ -1,5 +1,7 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma-db';
+
+export const dynamic = 'force-dynamic';
 import IngresoEgresoChart from '@/components/charts/IngresoEgresoChart';
 
 export default async function DashboardPage() {

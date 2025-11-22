@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/reportes/mensual?mes=11&año=2025&tipoSocio=Funcionario
  * Informe mensual consolidado:

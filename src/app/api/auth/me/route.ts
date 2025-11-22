@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateJWT } from '@/lib/auth';
 import { prisma } from '@/lib/prisma-db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/auth/me
  * Obtiene los datos del usuario actual (requiere JWT)

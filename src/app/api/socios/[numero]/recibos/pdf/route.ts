@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 // Load pdfkit dynamically to avoid build-time resolution errors when dependency isn't installed
 let PDFDocument: any = null
 

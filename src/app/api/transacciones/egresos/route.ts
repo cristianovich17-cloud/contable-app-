@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-db';
 
+export const dynamic = 'force-dynamic';
+
 // Categorías de egresos predefinidas
 const CATEGORIAS_EGRESOS = ['administrativos', 'proveedores', 'bienestar', 'salarios', 'otros'];
 

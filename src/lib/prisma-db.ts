@@ -1,15 +1,45 @@
 import { PrismaClient } from '@prisma/client';
 
-// Singleton para evitar crear múltiples instancias de Prisma
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+// Inicialización perezosa de Prisma para evitar que el build falle
+// cuando no existen variables de entorno (ej. durante el paso de build en CI).
+const globalForPrisma = global as unknown as { prisma?: PrismaClient };
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
+let _prisma: PrismaClient | undefined = globalForPrisma.prisma;
+
+function createPrisma(): PrismaClient {
+  if (_prisma) return _prisma;
+
+  // Si no hay DATABASE_URL definida (ej. durante build o sin secrets),
+  // exportamos un proxy que falla solo cuando se intenta usar.
+  if (!process.env.DATABASE_URL) {
+    const handler: ProxyHandler<any> = {
+      get(_target, prop) {
+        throw new Error(
+          `Prisma no está inicializado: falta DATABASE_URL. Accedió a \'${String(
+            prop
+          )}\'. Añada la variable de entorno 'DATABASE_URL' en secrets o evite llamadas a la BD durante el build.`
+        );
+      },
+      apply() {
+        throw new Error(
+          `Prisma no está inicializado: falta DATABASE_URL. Añada la variable de entorno 'DATABASE_URL' en secrets o evite llamadas a la BD durante el build.`
+        );
+      },
+    };
+    // @ts-ignore - proxy dinámico para evitar instanciar Prisma sin DATABASE_URL
+    _prisma = new Proxy({}, handler) as unknown as PrismaClient;
+    return _prisma;
+  }
+
+  const client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['info', 'warn', 'error'] : ['error'],
   });
+  if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = client;
+  _prisma = client;
+  return _prisma;
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export const prisma: PrismaClient = createPrisma();
 
 export interface Data {
   socios: any[];

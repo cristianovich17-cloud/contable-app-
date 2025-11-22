@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma-db'
 import Redis from 'ioredis'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const res: any = { ok: true }
 

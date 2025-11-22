@@ -3,6 +3,8 @@ import { getDb } from '@/lib/db'
 import { validateJWT } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 
+export const dynamic = 'force-dynamic'
+
 function inMonth(dateStr: string, month: number, year: number) {
   const d = new Date(dateStr)
   return d.getFullYear() === year && d.getMonth() + 1 === month

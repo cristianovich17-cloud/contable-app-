@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-db';
 
+export const dynamic = 'force-dynamic';
+
 // Categorías de ingresos predefinidas
 const CATEGORIAS_INGRESOS = ['cuotas', 'donaciones', 'actividades', 'intereses', 'otros'];
 

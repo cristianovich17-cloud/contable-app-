@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma-db'
+
+export const dynamic = 'force-dynamic'
 import { generarPDFBoleta } from '@/lib/pdf-boleta'
 import { enviarBoleta } from '@/lib/email'
 import { enqueueBoleta } from '@/lib/queue'

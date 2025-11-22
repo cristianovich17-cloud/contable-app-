@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma-db'
 
+export const dynamic = 'force-dynamic'
+
 function toCSV(rows: any[]) {
   if (!rows || rows.length === 0) return ''
   const headers = Object.keys(rows[0])
