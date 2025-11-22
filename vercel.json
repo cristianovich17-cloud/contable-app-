@@ -1,9 +1,28 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "package.json", "use": "@vercel/node" }
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "nodeVersion": "20.x",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, must-revalidate"
+        }
+      ]
+    }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" }
+  "redirects": [
+    {
+      "source": "/admin",
+      "destination": "/dashboard",
+      "permanent": true
+    }
   ]
 }
