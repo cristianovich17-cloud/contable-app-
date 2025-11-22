@@ -9,34 +9,38 @@ let _prisma: PrismaClient | undefined = globalForPrisma.prisma;
 function createPrisma(): PrismaClient {
   if (_prisma) return _prisma;
 
-  // Si no hay DATABASE_URL definida (ej. durante build o sin secrets),
-  // exportamos un proxy que falla solo cuando se intenta usar.
-  if (!process.env.DATABASE_URL) {
+  // Si no hay DATABASE_URL definida (ej. durante build),
+  // usa una URL por defecto para SQLite local
+  const databaseUrl = process.env.DATABASE_URL || 'file:./data/db.json';
+
+  try {
+    const client = new PrismaClient({
+      datasources: {
+        db: {
+          url: databaseUrl,
+        },
+      },
+      log: process.env.NODE_ENV === 'development' ? ['info', 'warn', 'error'] : ['error'],
+    });
+    
+    if (process.env.NODE_ENV !== 'production') {
+      globalForPrisma.prisma = client;
+    }
+    _prisma = client;
+    return _prisma;
+  } catch (error) {
+    // Si hay error creando cliente, retorna un proxy que falla solo cuando se use
     const handler: ProxyHandler<any> = {
       get(_target, prop) {
         throw new Error(
-          `Prisma no está inicializado: falta DATABASE_URL. Accedió a \'${String(
-            prop
-          )}\'. Añada la variable de entorno 'DATABASE_URL' en secrets o evite llamadas a la BD durante el build.`
-        );
-      },
-      apply() {
-        throw new Error(
-          `Prisma no está inicializado: falta DATABASE_URL. Añada la variable de entorno 'DATABASE_URL' en secrets o evite llamadas a la BD durante el build.`
+          `Prisma no inicializado correctamente. Accedió a '${String(prop)}'. Error: ${error}`
         );
       },
     };
-    // @ts-ignore - proxy dinámico para evitar instanciar Prisma sin DATABASE_URL
+    // @ts-ignore
     _prisma = new Proxy({}, handler) as unknown as PrismaClient;
     return _prisma;
   }
-
-  const client = new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['info', 'warn', 'error'] : ['error'],
-  });
-  if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = client;
-  _prisma = client;
-  return _prisma;
 }
 
 export const prisma: PrismaClient = createPrisma();

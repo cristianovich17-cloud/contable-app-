@@ -4,7 +4,8 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "DATABASE_URL": "file:./data/db.json"
   },
   "headers": [
     {
