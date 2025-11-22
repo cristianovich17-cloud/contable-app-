@@ -20,7 +20,6 @@ export default function LoginPage() {
   const [registerSuccess, setRegisterSuccess] = useState('');
 
   useEffect(() => {
-    // Verificar si ya hay sesión
     const token = localStorage.getItem('authToken');
     if (token) {
       router.push('/socios');
@@ -46,11 +45,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Guardar token y usuario en localStorage
       localStorage.setItem('authToken', data.data.token);
       localStorage.setItem('user', JSON.stringify(data.data.usuario));
-
-      // Redirigir a dashboard
       router.push('/socios');
     } catch (err) {
       setError('Error de conexión');
@@ -103,167 +99,166 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex p-3 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl mb-4">
+            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold gradient-text mb-2">Contable Pro</h1>
+          <p className="text-secondary-400">Sistema de contabilidad moderno</p>
+        </div>
+
         {!showRegister ? (
-          // FORMULARIO DE LOGIN
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">💰 Contable App</h1>
-              <p className="text-gray-600 text-sm mt-2">Sistema de Contabilidad para Asociación</p>
-            </div>
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                ✗ {error}
-              </div>
-            )}
-
+          // LOGIN FORM
+          <div className="card">
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Email</label>
+                <label className="block text-sm font-medium mb-2">Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@email.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input"
+                  placeholder="tu-email@example.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Contraseña</label>
+                <label className="block text-sm font-medium mb-2">Contraseña</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="input"
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
+
+              {error && (
+                <div className="p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-300 text-sm">
+                  {error}
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg transition disabled:opacity-50"
+                className="w-full btn-primary py-3 font-medium disabled:opacity-50"
               >
-                {loading ? '⏳ Iniciando sesión...' : '🔓 Iniciar Sesión'}
+                {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </button>
-            </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-gray-600 text-sm">
-                ¿No tienes cuenta?{' '}
+              <div className="text-center pt-4 border-t border-secondary-700">
+                <p className="text-secondary-400 text-sm mb-2">¿No tienes cuenta?</p>
                 <button
+                  type="button"
                   onClick={() => setShowRegister(true)}
-                  className="text-blue-500 hover:text-blue-600 font-medium"
+                  className="text-primary-400 hover:text-primary-300 font-medium text-sm"
                 >
-                  Crear una
+                  Crear una nueva cuenta
                 </button>
-              </p>
-            </div>
-
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-gray-700 mb-2 font-medium">Demo (no requiere registro):</p>
-              <p className="text-xs text-gray-600">Email: admin@example.com</p>
-              <p className="text-xs text-gray-600">Pass: admin123</p>
-            </div>
+              </div>
+            </form>
           </div>
         ) : (
-          // FORMULARIO DE REGISTRO
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">👤 Crear Cuenta</h1>
-              <p className="text-gray-600 text-sm mt-2">Registra un nuevo usuario</p>
-            </div>
-
-            {registerError && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                ✗ {registerError}
-              </div>
-            )}
-
-            {registerSuccess && (
-              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                {registerSuccess}
-              </div>
-            )}
-
+          // REGISTER FORM
+          <div className="card">
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Nombre</label>
+                <label className="block text-sm font-medium mb-2">Nombre Completo</label>
                 <input
                   type="text"
                   value={registerNombre}
                   onChange={(e) => setRegisterNombre(e.target.value)}
+                  className="input"
                   placeholder="Juan Pérez"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Email</label>
+                <label className="block text-sm font-medium mb-2">Email</label>
                 <input
                   type="email"
                   value={registerEmail}
                   onChange={(e) => setRegisterEmail(e.target.value)}
-                  placeholder="tu@email.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input"
+                  placeholder="tu-email@example.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Contraseña</label>
+                <label className="block text-sm font-medium mb-2">Contraseña</label>
                 <input
                   type="password"
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
+                  className="input"
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Rol</label>
+                <label className="block text-sm font-medium mb-2">Rol</label>
                 <select
                   value={registerRol}
                   onChange={(e) => setRegisterRol(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input"
                 >
+                  <option value="visor">Visor (Lectura)</option>
+                  <option value="editor">Editor (Lectura/Escritura)</option>
                   <option value="admin">Administrador</option>
-                  <option value="contador">Contador</option>
-                  <option value="visor">Visualizador</option>
                 </select>
               </div>
+
+              {registerError && (
+                <div className="p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-300 text-sm">
+                  {registerError}
+                </div>
+              )}
+
+              {registerSuccess && (
+                <div className="p-3 bg-emerald-500 bg-opacity-20 border border-emerald-500 rounded-lg text-emerald-300 text-sm">
+                  {registerSuccess}
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={registerLoading}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition disabled:opacity-50"
+                className="w-full btn-primary py-3 font-medium disabled:opacity-50"
               >
-                {registerLoading ? '⏳ Registrando...' : '✅ Registrar'}
+                {registerLoading ? 'Registrando...' : 'Crear Cuenta'}
               </button>
-            </form>
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => {
-                  setShowRegister(false);
-                  setRegisterError('');
-                  setRegisterSuccess('');
-                }}
-                className="text-blue-500 hover:text-blue-600 font-medium text-sm"
-              >
-                ← Volver al Login
-              </button>
-            </div>
+              <div className="text-center pt-4 border-t border-secondary-700">
+                <p className="text-secondary-400 text-sm mb-2">¿Ya tienes cuenta?</p>
+                <button
+                  type="button"
+                  onClick={() => setShowRegister(false)}
+                  className="text-primary-400 hover:text-primary-300 font-medium text-sm"
+                >
+                  Volver a iniciar sesión
+                </button>
+              </div>
+            </form>
           </div>
         )}
+
+        {/* Info */}
+        <div className="mt-8 text-center text-sm text-secondary-400">
+          <p>
+            ¿Necesitas ayuda? <Link href="/" className="text-primary-400 hover:text-primary-300">Volver al inicio</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
