@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-db';
+import { validateJWT } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,15 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest) {
   try {
+    // Validar autenticación
+    const user = await validateJWT(req);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No autorizado. Por favor inicia sesión.' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const mes = parseInt(searchParams.get('mes') || String(new Date().getMonth() + 1));
     const año = parseInt(searchParams.get('año') || String(new Date().getFullYear()));
@@ -25,8 +35,8 @@ export async function GET(req: NextRequest) {
 
     // 1. Ingresos y egresos por categoría
     const [transaccionesIngresos, transaccionesEgresos] = await Promise.all([
-      prisma.transaccion.findMany({ where: { tipo: 'ingreso', mes, año } }),
-      prisma.transaccion.findMany({ where: { tipo: 'egreso', mes, año } }),
+      prisma.transaccion.findMany({ where: { tipo: 'ingreso', mes, año } }).catch(() => []),
+      prisma.transaccion.findMany({ where: { tipo: 'egreso', mes, año } }).catch(() => []),
     ]);
 
     const ingresosCategoria: Record<string, number> = {};

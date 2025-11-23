@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma-db';
+import { validateJWT } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,15 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: NextRequest) {
   try {
+    // Validar autenticación
+    const user = await validateJWT(req);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No autorizado. Por favor inicia sesión.' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const año = parseInt(searchParams.get('año') || String(new Date().getFullYear()));
     const formato = searchParams.get('formato') || 'json'; // json o csv
