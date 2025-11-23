@@ -5,7 +5,7 @@
   "framework": "nextjs",
   "env": {
     "NODE_ENV": "production",
-    "DATABASE_URL": "file:./data/db.json"
+    "DATABASE_URL": "file:/tmp/contable.db"
   },
   "headers": [
     {

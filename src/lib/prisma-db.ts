@@ -9,9 +9,8 @@ let _prisma: PrismaClient | undefined = globalForPrisma.prisma;
 function createPrisma(): PrismaClient {
   if (_prisma) return _prisma;
 
-  // Si no hay DATABASE_URL definida (ej. durante build),
-  // usa una URL por defecto para SQLite local
-  const databaseUrl = process.env.DATABASE_URL || 'file:./data/db.json';
+  // Si no hay DATABASE_URL definida, usa /tmp/contable.db (writable en Vercel)
+  const databaseUrl = process.env.DATABASE_URL || 'file:/tmp/contable.db';
 
   try {
     const client = new PrismaClient({
