@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ReporteMensual {
   ok: boolean;
@@ -14,6 +16,9 @@ interface ReporteMensual {
 }
 
 export default function ReportesPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  
   const [vista, setVista] = useState<'mensual' | 'anual'>('mensual');
   const [mes, setMes] = useState(new Date().getMonth() + 1);
   const [año, setAño] = useState(new Date().getFullYear());
@@ -27,13 +32,23 @@ export default function ReportesPage() {
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ];
 
+  // Redirigir si no está autenticado
   useEffect(() => {
-    if (vista === 'mensual') {
-      cargarReporteMensual();
-    } else {
-      cargarReporteAnual();
+    if (!authLoading && !user) {
+      router.push('/login');
     }
-  }, [vista, mes, año]);
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
+    // Solo cargar reportes si está autenticado
+    if (user) {
+      if (vista === 'mensual') {
+        cargarReporteMensual();
+      } else {
+        cargarReporteAnual();
+      }
+    }
+  }, [vista, mes, año, user]);
 
   async function cargarReporteMensual() {
     try {

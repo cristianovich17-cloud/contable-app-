@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Transaccion {
   id: number;
@@ -15,6 +17,9 @@ interface Transaccion {
 }
 
 export default function TransaccionesPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  
   const [tipo, setTipo] = useState<'ingreso' | 'egreso'>('ingreso');
   const [categoria, setCategoria] = useState('');
   const [mes, setMes] = useState(new Date().getMonth() + 1);
@@ -25,6 +30,13 @@ export default function TransaccionesPage() {
   const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState('');
+
+  // Redirigir si no está autenticado
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [authLoading, user, router]);
 
   const categoriasIngresos = ['cuotas', 'donaciones', 'actividades', 'intereses', 'otros'];
   const categoriasEgresos = ['administrativos', 'proveedores', 'bienestar', 'salarios', 'otros'];
