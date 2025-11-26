@@ -183,30 +183,30 @@ const SociosPage = () => {
 
       {/* Historial de envíos recientes */}
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2">Historial de envíos (últimos 10)</h3>
-        <div className="bg-white border rounded p-2">
+        <h3 className="text-lg font-semibold mb-2 text-white">Historial de envíos (últimos 10)</h3>
+        <div className="bg-gray-900 border border-gray-700 rounded p-2">
           {sentEmails.length === 0 ? (
-            <div className="text-sm text-gray-600">No hay registros de envíos aún.</div>
+            <div className="text-sm text-gray-400">No hay registros de envíos aún.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="text-left text-gray-700">
+              <table className="min-w-full text-sm text-gray-200">
+                <thead className="text-left bg-gray-800 text-gray-100">
                   <tr>
-                    <th className="px-2">Fecha</th>
-                    <th className="px-2">N° Socio</th>
-                    <th className="px-2">Email</th>
-                    <th className="px-2">Estado</th>
-                    <th className="px-2">Error</th>
+                    <th className="px-2 py-2">Fecha</th>
+                    <th className="px-2 py-2">N° Socio</th>
+                    <th className="px-2 py-2">Email</th>
+                    <th className="px-2 py-2">Estado</th>
+                    <th className="px-2 py-2">Error</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sentEmails.slice(0, 10).map((e, idx) => (
-                    <tr key={idx} className="border-t">
+                    <tr key={idx} className="border-t border-gray-700 hover:bg-gray-800">
                       <td className="px-2 py-1">{new Date(e.fecha).toLocaleString()}</td>
                       <td className="px-2 py-1">{e.numero}</td>
                       <td className="px-2 py-1">{e.email}</td>
-                      <td className="px-2 py-1">{e.ok ? <span className="text-green-600">Enviado</span> : <span className="text-red-600">Fallido</span>}</td>
-                      <td className="px-2 py-1 text-xs text-red-600">{e.error || '-'}</td>
+                      <td className="px-2 py-1">{e.ok ? <span className="text-green-400">Enviado</span> : <span className="text-red-400">Fallido</span>}</td>
+                      <td className="px-2 py-1 text-xs text-red-400">{e.error || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -215,7 +215,7 @@ const SociosPage = () => {
           )}
           <div className="mt-2">
             <div className="flex gap-2">
-              <button onClick={fetchSentEmails} className="bg-gray-200 px-2 py-1 rounded text-sm">Actualizar historial</button>
+              <button onClick={fetchSentEmails} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm">Actualizar historial</button>
               <button onClick={async () => {
                 if (!confirm(`Reintentar envíos fallidos para ${bulkMes}/${bulkAño}?`)) return
                 try {
@@ -226,8 +226,8 @@ const SociosPage = () => {
                     fetchSentEmails()
                   } else alert('Error reintentando: ' + (data.error || ''))
                 } catch (err) { alert('Error ejecutando reintentos') }
-              }} className="bg-yellow-500 px-2 py-1 rounded text-sm">Reintentar fallidos</button>
-              <a href="/api/socios/sent-emails/export" className="bg-blue-200 px-2 py-1 rounded text-sm">Exportar CSV</a>
+              }} className="bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded text-sm">Reintentar fallidos</button>
+              <a href="/api/socios/sent-emails/export" className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-sm">Exportar CSV</a>
               <button onClick={async () => {
                 try {
                   const res = await fetch('/api/worker/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ concurrency: 4, maxRetries: 3 }) })
@@ -237,8 +237,8 @@ const SociosPage = () => {
                     setWorkerRunning(true)
                   } else alert('No se pudo iniciar worker: ' + (j.message || j.error || ''))
                 } catch (err) { alert('Error iniciando worker') }
-              }} className="bg-indigo-400 px-2 py-1 rounded text-sm">Iniciar Worker</button>
-              <button onClick={fetchWorkerStatus} className="bg-gray-100 px-2 py-1 rounded text-sm">Estado Worker</button>
+              }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded text-sm">Iniciar Worker</button>
+              <button onClick={fetchWorkerStatus} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm">Estado Worker</button>
             </div>
           </div>
         </div>
@@ -248,20 +248,20 @@ const SociosPage = () => {
         <div>Cargando socios...</div>
       ) : (
         <div className="overflow-x-auto">
-          <div className="mb-6 p-4 bg-gray-50 rounded border">
-            <h2 className="text-lg font-semibold mb-2">Configuración de Cuotas</h2>
+          <div className="mb-6 p-4 bg-gray-800 rounded border border-gray-700">
+            <h2 className="text-lg font-semibold mb-2 text-white">Configuración de Cuotas</h2>
             <form onSubmit={handleSaveCuota} className="flex items-end gap-4">
               <div>
-                <label className="block text-sm">Cuota Bienestar</label>
-                <input type="number" value={cuotaBienestar} onChange={e => setCuotaBienestar(Number(e.target.value))} className="border px-2 py-1 rounded w-40" />
+                <label className="block text-sm text-gray-300">Cuota Bienestar</label>
+                <input type="number" value={cuotaBienestar} onChange={e => setCuotaBienestar(Number(e.target.value))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded w-40" />
               </div>
               <div>
-                <label className="block text-sm">Cuota Ordinaria</label>
-                <input type="number" value={cuotaOrdinaria} onChange={e => setCuotaOrdinaria(Number(e.target.value))} className="border px-2 py-1 rounded w-40" />
+                <label className="block text-sm text-gray-300">Cuota Ordinaria</label>
+                <input type="number" value={cuotaOrdinaria} onChange={e => setCuotaOrdinaria(Number(e.target.value))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded w-40" />
               </div>
               <div>
-                <label className="block text-sm">Cuota Socio AFUT</label>
-                <div className="font-medium">{formatCurrency(calcularCuotaAFUT(cuotaBienestar, cuotaOrdinaria))}</div>
+                <label className="block text-sm text-gray-300">Cuota Socio AFUT</label>
+                <div className="font-medium text-white">{formatCurrency(calcularCuotaAFUT(cuotaBienestar, cuotaOrdinaria))}</div>
               </div>
               <div>
                 <button disabled={savingCuota} className="bg-indigo-600 text-white px-3 py-1 rounded">
@@ -270,7 +270,7 @@ const SociosPage = () => {
               </div>
             </form>
           </div>
-          <table className="min-w-full bg-white">
+          <table className="min-w-full bg-gray-900">
             <thead className="bg-gray-800 text-white">
               <tr>
                 <th className="py-3 px-4 uppercase font-semibold text-sm">N°</th>
@@ -281,9 +281,9 @@ const SociosPage = () => {
                 <th className="py-3 px-4 uppercase font-semibold text-sm">Estado</th>
               </tr>
             </thead>
-            <tbody className="text-gray-700">
+            <tbody className="text-gray-200">
               {socios.map((s) => (
-                <tr key={s.rut + s.numero}>
+                <tr key={s.rut + s.numero} className="border-t border-gray-700 hover:bg-gray-800">
                   <td className="py-3 px-4">{s.numero}</td>
                   <td className="py-3 px-4">{s.rut}</td>
                   <td className="py-3 px-4">{s.nombre}</td>
