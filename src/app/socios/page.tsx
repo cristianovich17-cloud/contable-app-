@@ -144,13 +144,13 @@ const SociosPage = () => {
             🚪 Logout
           </button>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 mr-4 bg-gray-50 p-2 rounded">
-            <select value={bulkMes} onChange={e => setBulkMes(Number(e.target.value))} className="border px-2 py-1 rounded text-sm">
+            <div className="flex items-center gap-2 mr-4 bg-gray-800 border border-gray-700 p-2 rounded">
+            <select value={bulkMes} onChange={e => setBulkMes(Number(e.target.value))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded text-sm">
               {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                 <option key={m} value={m}>{['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m-1]}</option>
               ))}
             </select>
-            <input type="number" value={bulkAño} onChange={e => setBulkAño(Number(e.target.value))} className="border px-2 py-1 rounded w-24 text-sm" />
+            <input type="number" value={bulkAño} onChange={e => setBulkAño(Number(e.target.value))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded w-24 text-sm" />
             <button onClick={async () => {
               if (!confirm(`Enviar boletas a todos los socios para ${bulkMes}/${bulkAño}?`)) return
               setBulkSending(true)
@@ -358,10 +358,10 @@ const SociosPage = () => {
 
                     {/* Discount form */}
                     {discountForms[s.numero] && (
-                      <div className="mt-2 p-2 border rounded bg-white">
-                        <input placeholder="Tipo" value={discountForms[s.numero].tipo} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], tipo: e.target.value } }))} className="border px-2 py-1 rounded mr-2 text-sm" />
-                        <input type="number" placeholder="Monto" value={discountForms[s.numero].monto} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], monto: Number(e.target.value) } }))} className="border px-2 py-1 rounded mr-2 w-32 text-sm" />
-                        <input placeholder="Descripción" value={discountForms[s.numero].descripcion} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], descripcion: e.target.value } }))} className="border px-2 py-1 rounded mr-2 text-sm" />
+                      <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
+                        <input placeholder="Tipo" value={discountForms[s.numero].tipo} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], tipo: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
+                        <input type="number" placeholder="Monto" value={discountForms[s.numero].monto} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], monto: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-32 text-sm" />
+                        <input placeholder="Descripción" value={discountForms[s.numero].descripcion} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], descripcion: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
                         <button onClick={async () => {
                           const f = discountForms[s.numero]
                           if (!f) return
@@ -381,10 +381,10 @@ const SociosPage = () => {
 
                     {/* Credit form */}
                     {creditForms[s.numero] && (
-                      <div className="mt-2 p-2 border rounded bg-white">
-                        <input type="number" placeholder="Monto total" value={creditForms[s.numero].montoTotal} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], montoTotal: Number(e.target.value) } }))} className="border px-2 py-1 rounded mr-2 w-36 text-sm" />
-                        <input type="number" placeholder="Cuotas" value={creditForms[s.numero].cuotas} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], cuotas: Number(e.target.value) } }))} className="border px-2 py-1 rounded mr-2 w-24 text-sm" />
-                        <input placeholder="Descripción" value={creditForms[s.numero].descripcion} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], descripcion: e.target.value } }))} className="border px-2 py-1 rounded mr-2 text-sm" />
+                      <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
+                        <input type="number" placeholder="Monto total" value={creditForms[s.numero].montoTotal} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], montoTotal: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-36 text-sm" />
+                        <input type="number" placeholder="Cuotas" value={creditForms[s.numero].cuotas} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], cuotas: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
+                        <input placeholder="Descripción" value={creditForms[s.numero].descripcion} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], descripcion: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
                         <button onClick={async () => {
                           const f = creditForms[s.numero]
                           if (!f) return
@@ -404,14 +404,14 @@ const SociosPage = () => {
 
                     {/* Payment form */}
                     {paymentForms[s.numero] && (
-                      <div className="mt-2 p-2 border rounded bg-white">
-                        <input type="number" placeholder="Monto" value={paymentForms[s.numero].amount} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], amount: Number(e.target.value) } }))} className="border px-2 py-1 rounded mr-2 w-32 text-sm" />
-                        <select value={paymentForms[s.numero].tipo} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], tipo: e.target.value } }))} className="border px-2 py-1 rounded mr-2 text-sm">
-                          <option>Cuota</option>
-                          <option>Credito</option>
-                          <option>Otro</option>
+                      <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
+                        <input type="number" placeholder="Monto" value={paymentForms[s.numero].amount} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], amount: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-32 text-sm" />
+                        <select value={paymentForms[s.numero].tipo} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], tipo: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
+                          <option className="bg-gray-700 text-white">Cuota</option>
+                          <option className="bg-gray-700 text-white">Credito</option>
+                          <option className="bg-gray-700 text-white">Otro</option>
                         </select>
-                        <select value={paymentForms[s.numero].creditId || ''} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], creditId: e.target.value || undefined } }))} className="border px-2 py-1 rounded mr-2 text-sm">
+                        <select value={paymentForms[s.numero].creditId || ''} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], creditId: e.target.value || undefined } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
                           <option value="">(Sin crédito)</option>
                           {(creditsCache[s.numero] || []).map(c => (
                             <option key={c.id} value={c.id}>{`Crédito ${c.id} - cuota ${c.cuotaMensual}`}</option>
@@ -442,14 +442,14 @@ const SociosPage = () => {
 
                       {/* Boleta form */}
                       {boletaForms[s.numero] && (
-                        <div className="mt-2 p-2 border rounded bg-white">
-                          <select value={boletaForms[s.numero].mes} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], mes: Number(e.target.value) } }))} className="border px-2 py-1 rounded mr-2 text-sm">
+                        <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
+                          <select value={boletaForms[s.numero].mes} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], mes: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
                             {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                              <option key={m} value={m}>{['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][m - 1]}</option>
+                              <option key={m} value={m} className="bg-gray-700 text-white">{['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][m - 1]}</option>
                             ))}
                           </select>
-                          <input type="number" placeholder="Año" value={boletaForms[s.numero].año} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], año: Number(e.target.value) } }))} className="border px-2 py-1 rounded mr-2 w-24 text-sm" />
-                          <input type="email" placeholder="Email" value={boletaForms[s.numero].email} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], email: e.target.value } }))} className="border px-2 py-1 rounded mr-2 text-sm" />
+                          <input type="number" placeholder="Año" value={boletaForms[s.numero].año} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], año: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
+                          <input type="email" placeholder="Email" value={boletaForms[s.numero].email} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], email: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
                           <button onClick={async () => {
                             const f = boletaForms[s.numero]
                             if (!f || !f.email) {
