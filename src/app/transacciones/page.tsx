@@ -107,7 +107,7 @@ export default function TransaccionesPage() {
   const resumenMensual = transacciones.reduce((sum, t) => sum + t.monto, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -122,7 +122,7 @@ export default function TransaccionesPage() {
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
               tipo === 'ingreso'
                 ? 'bg-green-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             ⬆️ Ingresos
@@ -132,7 +132,7 @@ export default function TransaccionesPage() {
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
               tipo === 'egreso'
                 ? 'bg-red-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             ⬇️ Egresos
@@ -141,19 +141,19 @@ export default function TransaccionesPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Formulario */}
-          <div className="lg:col-span-1 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4">Nueva {tipo === 'ingreso' ? 'Entrada' : 'Salida'}</h2>
+          <div className="lg:col-span-1 bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
+            <h2 className="text-xl font-bold mb-4 text-white">Nueva {tipo === 'ingreso' ? 'Entrada' : 'Salida'}</h2>
             <form onSubmit={crearTransaccion} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Categoría *</label>
                 <select
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-2"
                 >
-                  <option value="">Selecciona categoría</option>
+                  <option className="bg-gray-700 text-white" value="">Selecciona categoría</option>
                   {categorias.map((cat) => (
-                    <option key={cat} value={cat}>
+                    <option key={cat} value={cat} className="bg-gray-700 text-white">
                       {cat.charAt(0).toUpperCase() + cat.slice(1)}
                     </option>
                   ))}
@@ -162,63 +162,63 @@ export default function TransaccionesPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mes *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Mes *</label>
                   <input
                     type="number"
                     min="1"
                     max="12"
                     value={mes}
                     onChange={(e) => setMes(parseInt(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg p-2"
+                    className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-2"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Año *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Año *</label>
                   <input
                     type="number"
                     value={año}
                     onChange={(e) => setAño(parseInt(e.target.value))}
-                    className="w-full border border-gray-300 rounded-lg p-2"
+                    className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-2"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monto *</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Monto *</label>
                 <input
                   type="number"
                   step="0.01"
                   value={monto}
                   onChange={(e) => setMonto(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-2"
                   placeholder="0.00"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Concepto</label>
                 <input
                   type="text"
                   value={concepto}
                   onChange={(e) => setConcepto(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-2"
                   placeholder="Descripción breve"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Referencia</label>
                 <input
                   type="text"
                   value={referencia}
                   onChange={(e) => setReferencia(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-2"
                   placeholder="Comprobante, factura, etc."
                 />
               </div>
 
               {mensaje && (
-                <div className={`p-3 rounded-lg ${mensaje.startsWith('✓') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                <div className={`p-3 rounded-lg ${mensaje.startsWith('✓') ? 'bg-green-900 text-green-200 border border-green-700' : 'bg-red-900 text-red-200 border border-red-700'}`}>
                   {mensaje}
                 </div>
               )}
@@ -234,9 +234,9 @@ export default function TransaccionesPage() {
           </div>
 
           {/* Lista de transacciones */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+          <div className="lg:col-span-2 bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
+              <h2 className="text-xl font-bold text-white">
                 {tipo === 'ingreso' ? 'Ingresos' : 'Egresos'} - {mes}/{año}
               </h2>
               <div className="text-right">
@@ -254,7 +254,7 @@ export default function TransaccionesPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b">
+                  <thead className="bg-gray-700 border-b border-gray-600 text-gray-200">
                     <tr>
                       <th className="px-4 py-2 text-left font-medium">Categoría</th>
                       <th className="px-4 py-2 text-left font-medium">Concepto</th>
@@ -263,15 +263,15 @@ export default function TransaccionesPage() {
                       <th className="px-4 py-2 text-left font-medium">Fecha</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-gray-700">
                     {transacciones.map((t) => (
-                      <tr key={t.id} className="hover:bg-gray-50">
+                      <tr key={t.id} className="hover:bg-gray-700 text-gray-200">
                         <td className="px-4 py-2 font-medium">{t.categoria}</td>
-                        <td className="px-4 py-2 text-gray-600">{t.concepto || '-'}</td>
-                        <td className={`px-4 py-2 text-right font-semibold ${tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'}`}>
+                        <td className="px-4 py-2 text-gray-400">{t.concepto || '-'}</td>
+                        <td className={`px-4 py-2 text-right font-semibold ${tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'}`}>
                           ${t.monto.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 text-gray-600 text-xs">{t.referencia || '-'}</td>
+                        <td className="px-4 py-2 text-gray-400 text-xs">{t.referencia || '-'}</td>
                         <td className="px-4 py-2 text-gray-500 text-xs">{new Date(t.createdAt).toLocaleDateString()}</td>
                       </tr>
                     ))}
