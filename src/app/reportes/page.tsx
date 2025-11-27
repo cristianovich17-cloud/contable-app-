@@ -143,7 +143,6 @@ export default function ReportesPage() {
                   value={mes}
                   onChange={(e) => setMes(parseInt(e.target.value))}
                   className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg p-2">
-                >
                   {meses.map((m, i) => (
                     <option key={i} value={i + 1}>
                       {m}
