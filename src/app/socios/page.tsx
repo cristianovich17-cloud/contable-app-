@@ -211,7 +211,14 @@ const SociosPage = () => {
               Importar Excel
               <input ref={fileRef} type="file" accept=".xls,.xlsx" className="hidden" />
             </label>
-            <button type="button" onClick={() => handleImport()} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <button 
+              type="button" 
+              onClick={() => {
+                console.log('[Frontend] Button CLICKED!')
+                handleImport()
+              }} 
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
               Procesar Importación
             </button>
           </div>
