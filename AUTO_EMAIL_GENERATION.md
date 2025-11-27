@@ -2,7 +2,15 @@
 
 ## Descripción
 
-Cuando un socio no tiene correo electrónico especificado, el sistema genera automáticamente uno basado en su nombre.
+Cuando un socio **no tiene correo especificado**, el sistema genera automáticamente uno basado en su nombre.
+
+El correo se genera **SOLO cuando está en blanco** en:
+- ✅ Importación desde Excel (columna de correo vacía)
+- ✅ Creación manual por API (campo email no proporcionado o vacío)
+
+Si se proporciona un correo, **siempre se preserva** tal como está (solo normalizado).
+
+## Formato de Correo Generado
 
 ## Formato de Correo Generado
 
@@ -77,7 +85,31 @@ Si importas un archivo Excel sin la columna de correo (o con celdas vacías):
 - patricia.martinez@contable.app
 - empresa.xyz@contable.app
 
-## Comportamiento
+## Comportamiento Detallado
+
+### ✅ Se GENERA correo automático cuando:
+- El campo `email` en Excel está **vacío/en blanco**
+- Se crea un socio por API **sin proporcionar** el campo `email`
+- Se crea un socio por API con `email: ""` o `email: null`
+
+### ❌ NO se genera cuando:
+- Se proporciona un correo válido (se preserva exactamente como se proporciona)
+- La celda en Excel tiene un valor (aunque sea incorrecto)
+
+## Validación en Excel
+
+| Situación | Resultado |
+|-----------|-----------|
+| Correo: vacío | ✅ Se genera: `juan.garcia@contable.app` |
+| Correo: `juan@example.com` | ✅ Se preserva: `juan@example.com` |
+| Correo: `  ` (solo espacios) | ✅ Se genera (espacios tratados como vacío) |
+| Sin columna de correo | ✅ Se genera para todos |
+
+## Ejemplos Prácticos
+
+### Excel con columna vacía
+
+**Entrada:**
 
 - ✅ Si se proporciona un correo válido, se **mantiene tal cual** (solo se normaliza)
 - ✅ Si el correo está vacío o no se proporciona, se **genera uno automático**

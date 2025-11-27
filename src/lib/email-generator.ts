@@ -1,16 +1,29 @@
 /**
  * Genera un correo electrónico automático basado en el nombre del socio
- * Si el socio ya tiene correo, lo retorna tal cual
- * Si no tiene correo, genera uno a partir del nombre
+ * SOLO genera correo si:
+ * 1. El correo está vacío/undefined
+ * 2. El correo es una cadena vacía o solo espacios
+ * 
+ * Si el socio ya tiene un correo válido, lo retorna sin cambios.
+ * 
+ * Formato generado: {nombre-normalizado}@contable.app
+ * - Acentos removidos
+ * - Espacios y caracteres especiales reemplazados con puntos
+ * - Convertido a minúsculas
+ * - Puntos múltiples colapsados
+ * 
+ * @param nombre - Nombre del socio (requerido)
+ * @param email - Correo del socio (opcional)
+ * @returns Correo del socio (generado o existente)
  */
 export function generateEmailIfMissing(nombre: string, email?: string): string {
-  // Si ya tiene correo, retornarlo tal cual
+  // Si ya tiene correo válido, retornarlo sin cambios
   if (email && email.trim() !== '') {
     return email.trim();
   }
 
   // Generar correo a partir del nombre
-  // Convertir a minúsculas, reemplazar espacios y caracteres especiales
+  // Proceso: normalizar nombre → minúsculas → remover acentos → reemplazar especiales con puntos
   const emailBase = nombre
     .toLowerCase()
     .trim()
