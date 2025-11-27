@@ -104,18 +104,18 @@ const SociosPage = () => {
       const data = await res.json()
       
       if (data.ok) {
-        let message = `✅ Importación completada!\n\n`
+        let message = `✅ ¡Importación exitosa!\n\n`
         message += `📊 Socios importados: ${data.addedCount}\n`
         
         if (data.errors && data.errors.length > 0) {
-          message += `❌ Errores: ${data.errors.length}\n\n`
+          message += `⚠️ Errores encontrados: ${data.errors.length}\n\n`
           message += 'Detalles de errores:\n'
           data.errors.slice(0, 5).forEach((err: any) => {
-            message += `\nFila ${err.row} (${err.data?.nombre || 'N/A'}):\n`
-            err.errors.forEach((e: string) => message += `  • ${e}\n`)
+            message += `\n📍 Fila ${err.row} (${err.data?.nombre || 'Sin nombre'}):\n`
+            err.errors.forEach((e: string) => message += `   ❌ ${e}\n`)
           })
           if (data.errors.length > 5) {
-            message += `\n... y ${data.errors.length - 5} errores más`
+            message += `\n... y ${data.errors.length - 5} error(es) más`
           }
         }
         
@@ -127,7 +127,20 @@ const SociosPage = () => {
           fileRef.current.value = ''
         }
       } else {
-        alert(`❌ Error en importación:\n${data.error || 'Unknown error'}`)
+        // Mostrar error con formato
+        let errorMsg = data.error || 'Error desconocido'
+        
+        // Si es un error de formato, mostrarlo de forma clara
+        if (data.missingColumns && data.missingColumns.length > 0) {
+          errorMsg = `❌ FORMATO INCORRECTO\n\n`
+          errorMsg += `Columnas que faltan:\n`
+          errorMsg += data.missingColumns.map((col: string) => `  • ${col}`).join('\n')
+          errorMsg += `\n\nColumnas encontradas:\n`
+          errorMsg += data.foundColumns.map((col: string) => `  • ${col}`).join('\n')
+          errorMsg += `\n\n📖 Por favor revisa la guía de importación.`
+        }
+        
+        alert(errorMsg)
       }
     } catch (err) {
       console.error('Import error:', err)

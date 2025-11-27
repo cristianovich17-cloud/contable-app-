@@ -35,6 +35,51 @@ export async function POST(request: Request) {
     console.log('[Import] Rows found:', rows.length)
     console.log('[Import] Column headers:', Object.keys(rows[0] || {}))
 
+    // Validar que hay filas
+    if (rows.length === 0) {
+      return NextResponse.json({ 
+        ok: false, 
+        error: '❌ El Excel está vacío. Por favor agrega al menos una fila de datos.' 
+      }, { status: 400 })
+    }
+
+    // Validar columnas requeridas
+    const firstRow = rows[0] || {}
+    const headers = Object.keys(firstRow)
+    
+    const requiredColumns = {
+      numero: ['N°', 'N', 'No', 'numero', 'n°', 'n'],
+      rut: ['RUT', 'Rut', 'rut'],
+      nombre: ['Nombre completo', 'Nombre', 'nombre'],
+      calidad: ['Calidad jurídica', 'Calidad juridica', 'Calidad', 'calidad']
+    }
+
+    const missingColumns: string[] = []
+    let hasNumero = false, hasRUT = false, hasNombre = false, hasCalidad = false
+
+    headers.forEach(header => {
+      if (requiredColumns.numero.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasNumero = true
+      if (requiredColumns.rut.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasRUT = true
+      if (requiredColumns.nombre.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasNombre = true
+      if (requiredColumns.calidad.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasCalidad = true
+    })
+
+    if (!hasNumero) missingColumns.push('N°')
+    if (!hasRUT) missingColumns.push('RUT')
+    if (!hasNombre) missingColumns.push('Nombre Completo')
+    if (!hasCalidad) missingColumns.push('Calidad Jurídica')
+
+    if (missingColumns.length > 0) {
+      const errorMsg = `❌ El formato del Excel es incorrecto.\n\nFaltan estas columnas requeridas:\n${missingColumns.map(col => `  • ${col}`).join('\n')}\n\nColumnas encontradas: ${headers.join(', ')}\n\nVerifica la guía de importación para el formato correcto.`
+      console.log('[Import] Format error:', errorMsg)
+      return NextResponse.json({ 
+        ok: false, 
+        error: errorMsg,
+        missingColumns,
+        foundColumns: headers
+      }, { status: 400 })
+    }
+
     const db = await getDb()
     const existing = db.data!.socios || []
     const errors: any[] = []
@@ -92,6 +137,6 @@ export async function POST(request: Request) {
     })
   } catch (err: any) {
     console.error('[Import] Error:', err)
-    return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
+    return NextResponse.json({ ok: false, error: `❌ Error al procesar el archivo: ${String(err.message || err)}` }, { status: 500 })
   }
 }
