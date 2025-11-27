@@ -54,11 +54,19 @@ El sistema reconoce variaciones en los nombres de columnas:
 
 ## Valores Válidos para Calidad Jurídica
 
-- `Persona Natural`
-- `Empresa`
-- `Cooperativa`
-- `Asociación`
-- `Otro`
+Solo se aceptan DOS valores:
+
+1. **`Funcionario`** - Para trabajadores que son funcionarios públicos
+2. **`Código del Trabajo`** - Para trabajadores bajo código del trabajo (sector privado)
+
+Ejemplos válidos:
+- `Funcionario`
+- `funcionario`
+- `Código del Trabajo`
+- `código del trabajo`
+- `codigo del trabajo`
+- `Codigo`
+- `codigo`
 
 ---
 
@@ -67,9 +75,9 @@ El sistema reconoce variaciones en los nombres de columnas:
 ```
 N°  | RUT          | Nombre completo    | Correo electrónico      | Calidad jurídica
 ----|--------------|-------------------|-------------------------|------------------
-1   | 12.345.678-9 | Juan Pérez García  | juan@empresa.com        | Persona Natural
-2   | 98.765.432-1 | María López Silva  | maria@empresa.com       | Persona Natural
-3   | 55.123.789-K | Empresa XYZ S.A.   | contacto@empresaxyz.com | Empresa
+1   | 12.345.678-9 | Juan Pérez García  | juan@empresa.com        | Funcionario
+2   | 98.765.432-1 | María López Silva  | maria@empresa.com       | Código del Trabajo
+3   | 55.123.789-K | Carlos Muñoz Díaz  | carlos@empresa.com      | Funcionario
 ```
 
 ---
