@@ -88,8 +88,11 @@ const SociosPage = () => {
     } catch (_) {}
   }
 
-  async function handleImport(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleImport(e?: any) {
+    if (e && e.preventDefault) {
+      e.preventDefault()
+    }
+    
     if (!fileRef.current || !fileRef.current.files || fileRef.current.files.length === 0) {
       alert('Por favor selecciona un archivo')
       return
@@ -224,9 +227,9 @@ const SociosPage = () => {
             </div>
             <label className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
               Importar Excel
-              <input ref={fileRef} type="file" accept=".xls,.xlsx" className="hidden" />
+              <input ref={fileRef} type="file" accept=".xls,.xlsx" onChange={() => console.log('[Frontend] File selected')} className="hidden" />
             </label>
-            <button onClick={handleImport} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <button type="button" onClick={(e: any) => handleImport(e)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
               Procesar Importación
             </button>
           </div>
