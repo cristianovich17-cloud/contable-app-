@@ -116,8 +116,8 @@ export default function ReportesPage() {
             onClick={() => setVista('mensual')}
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
               vista === 'mensual'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             Mensual
@@ -126,8 +126,8 @@ export default function ReportesPage() {
             onClick={() => setVista('anual')}
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
               vista === 'anual'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             Anual
@@ -286,11 +286,11 @@ export default function ReportesPage() {
                         </td>
                       </tr>
                     ))}
-                    <tr className="bg-gray-100 font-bold">
+                    <tr className="bg-gray-700 font-bold text-white">
                       <td className="px-4 py-3">TOTAL</td>
-                      <td className="px-4 py-3 text-right text-green-600">${reporteAnual.totales.totalIngresosAnual.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-red-600">${reporteAnual.totales.totalEgresosAnual.toFixed(2)}</td>
-                      <td className={`px-4 py-3 text-right ${reporteAnual.totales.balanceAnual >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                      <td className="px-4 py-3 text-right text-green-400">${reporteAnual.totales.totalIngresosAnual.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right text-red-400">${reporteAnual.totales.totalEgresosAnual.toFixed(2)}</td>
+                      <td className={`px-4 py-3 text-right ${reporteAnual.totales.balanceAnual >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
                         ${reporteAnual.totales.balanceAnual.toFixed(2)}
                       </td>
                     </tr>

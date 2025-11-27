@@ -125,7 +125,7 @@ export default function AuditPage() {
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} className="border-b hover:bg-gray-50">
+                  <tr key={log.id} className="border-b border-gray-700 hover:bg-gray-800">
                     <td className="py-2 px-2 text-xs">
                       {new Date(log.createdAt).toLocaleString('es-CL')}
                     </td>
@@ -147,7 +147,7 @@ export default function AuditPage() {
                 key={p}
                 onClick={() => setPage(p)}
                 className={`px-3 py-1 rounded ${
-                  page === p ? 'bg-blue-600 text-white' : 'bg-gray-200'
+                  page === p ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 {p}
