@@ -4,6 +4,11 @@
 
 Se ha implementado la funcionalidad de **auto-generar correos electrónicos** cuando un socio no tiene uno especificado.
 
+**Funciona en:**
+- ✅ Importación desde Excel (cuando columna está vacía)
+- ✅ Creación manual por API (cuando no se proporciona el campo `email`)
+- ✅ Ambos casos: Auto-generar solo si el correo está en blanco
+
 ## Cambios Realizados
 
 ### 1. **Nuevo Archivo: `src/lib/email-generator.ts`**
@@ -45,22 +50,18 @@ El proceso normaliza el nombre para crear un correo válido:
 
 ## Tests Implementados
 
-### ✅ Unit Tests (test-email-generator.js)
-```
-Results: 8 passed, 0 failed
+### ✅ Unit Tests
+- `test-email-generator.js`: 8/8 tests pasando ✅
+- `test-api-manual-creation.js`: 5/5 tests pasando ✅
+  - Test 1: Crear socio SIN email → auto-genera ✅
+  - Test 2: Crear socio sin email (string vacío) → auto-genera ✅
+  - Test 3: Crear socio CON email → preserva ✅
+  - Test 4: Email con espacios → normaliza ✅
+  - Test 5: Nombre con acentos → auto-genera correctamente ✅
 
-✅ Test 1: Juan García → juan.garcia@contable.app
-✅ Test 2: María López Rodríguez → maria.lopez.rodriguez@contable.app
-✅ Test 3: José María García Pérez → jose.maria.garcia.perez@contable.app
-✅ Test 4: Empresa XYZ S.A. → empresa.xyz.s.a@contable.app
-✅ Test 5: Email existente preservado
-✅ Test 6: Email con espacios normalizado
-✅ Test 7: José → jose@contable.app
-✅ Test 8: Ángel Carrillo → angel.carrillo@contable.app
-```
-
-### 🔧 Integration Tests (test-auto-email.sh)
-Script para probar los endpoints de API
+### 🔧 Integration Tests
+- `test-auto-email.sh`: Script para probar endpoints de API
+- `test-api-manual-socio.js`: Helper para generar JWT tokens
 
 ## Cómo Usar
 
