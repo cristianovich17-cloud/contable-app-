@@ -6,6 +6,19 @@ import { generateEmailIfMissing, cleanEmail } from '@/lib/email-generator'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * Normaliza RUT removiendo puntos y espacios
+ * Acepta formatos: 12345678-9, 12.345.678-9, 12345678 9
+ */
+function normalizeRUT(rut: string): string {
+  if (!rut) return ''
+  return String(rut)
+    .trim()
+    .toUpperCase()
+    .replace(/\./g, '') // Remover puntos
+    .replace(/\s/g, '') // Remover espacios
+}
+
 export async function POST(request: Request) {
   try {
     const form = await request.formData()
@@ -20,7 +33,7 @@ export async function POST(request: Request) {
 
     console.log('[Import] Processing Excel file:', file.name)
     console.log('[Import] Rows found:', rows.length)
-    console.log('[Import] First row sample:', rows[0])
+    console.log('[Import] Column headers:', Object.keys(rows[0] || {}))
 
     const db = await getDb()
     const existing = db.data!.socios || []
@@ -30,10 +43,13 @@ export async function POST(request: Request) {
     rows.forEach((r, idx) => {
       // Normalize a few possible column names
       const numero = r['N°'] || r['N'] || r['No'] || r['numero'] || r['n°'] || r['n']
-      const rut = r['RUT'] || r['Rut'] || r['rut']
+      let rut = r['RUT'] || r['Rut'] || r['rut']
       const nombre = r['Nombre completo'] || r['Nombre'] || r['nombre']
       const email = r['Correo electrónico'] || r['Email'] || r['correo'] || r['email']
       const calidad = r['Calidad jurídica'] || r['Calidad juridica'] || r['Calidad'] || r['calidad']
+
+      // Normalizar RUT
+      rut = normalizeRUT(rut)
 
       const rowErrors = []
       if (!numero) rowErrors.push('Falta N°')
@@ -42,7 +58,7 @@ export async function POST(request: Request) {
       if (!calidad) rowErrors.push('Falta Calidad jurídica')
       if (calidad && !isValidCalidad(calidad)) rowErrors.push(`Calidad jurídica inválida: "${calidad}" (debe ser "Funcionario" o "Código del Trabajo")`)
 
-      const dup = existing.find(s => s.rut === String(rut).toString() || s.numero === String(numero).toString())
+      const dup = existing.find(s => s.rut === rut || s.numero === String(numero).toString())
       if (dup) rowErrors.push(`Duplicado: RUT ${rut} o N° ${numero} ya existe`)
 
       if (rowErrors.length) {
@@ -53,7 +69,7 @@ export async function POST(request: Request) {
 
       const nuevo = {
         numero: String(numero),
-        rut: String(rut),
+        rut: rut,
         nombre: String(nombre),
         email: cleanEmail(generateEmailIfMissing(String(nombre), email)),
         estado: 'Activo',
@@ -61,7 +77,7 @@ export async function POST(request: Request) {
       }
       existing.push(nuevo)
       added.push(nuevo)
-      console.log(`[Import] Row ${idx + 2} added: ${nombre} (${rut})`)
+      console.log(`[Import] Row ${idx + 2} added: ${nombre} (RUT: ${rut})`)
     })
 
     console.log('[Import] Summary - Added:', added.length, 'Errors:', errors.length)
