@@ -64,15 +64,20 @@ export async function POST(request: Request) {
       numero: ['N°', 'Nº', 'N', 'No', 'numero', 'n°', 'nº', 'n'],
       rut: ['RUT', 'Rut', 'rut'],
       nombre: ['Nombre completo', 'Nombre', 'nombre'],
-      calidad: ['Calidad jurídica', 'Calidad juridica', 'Calidad', 'calidad']
+      calidad: ['Calidad jurídica', 'Calidad Jurídica', 'Calidad juridica', 'Calidad Juridica', 'Calidad', 'calidad']
     }
 
     const missingColumns: string[] = []
     let hasNumero = false, hasRUT = false, hasNombre = false, hasCalidad = false
 
     headers.forEach(header => {
-      const headerLower = header.toLowerCase()
+      const headerLower = header.toLowerCase().trim()
+      // Búsqueda más inteligente usando includes
       if (requiredColumns.numero.some(col => headerLower.includes(col.toLowerCase()))) hasNumero = true
+      if (requiredColumns.rut.some(col => headerLower.includes(col.toLowerCase()))) hasRUT = true
+      if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) hasNombre = true
+      if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) hasCalidad = true
+    })
       if (requiredColumns.rut.some(col => headerLower.includes(col.toLowerCase()))) hasRUT = true
       if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) hasNombre = true
       if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) hasCalidad = true
