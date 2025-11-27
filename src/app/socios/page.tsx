@@ -22,6 +22,7 @@ const SociosPage = () => {
   const [socios, setSocios] = useState<Socio[]>([])
   const [loading, setLoading] = useState(false)
   const fileRef = useRef<HTMLInputElement | null>(null)
+  const importButtonRef = useRef<HTMLButtonElement | null>(null)
   const [cuotaBienestar, setCuotaBienestar] = useState<number>(0)
   const [cuotaOrdinaria, setCuotaOrdinaria] = useState<number>(0)
   const [savingCuota, setSavingCuota] = useState(false)
@@ -44,6 +45,23 @@ const SociosPage = () => {
       router.push('/login')
     }
   }, [user, authLoading, router])
+
+  // Adjuntar listener manualmente al botón de importación
+  useEffect(() => {
+    if (importButtonRef.current) {
+      console.log('[Frontend] Attaching click listener to import button')
+      const handler = () => {
+        console.log('[Frontend] Manual listener TRIGGERED!')
+        handleImport()
+      }
+      importButtonRef.current.addEventListener('click', handler)
+      return () => {
+        if (importButtonRef.current) {
+          importButtonRef.current.removeEventListener('click', handler)
+        }
+      }
+    }
+  }, [])
 
   async function fetchSocios() {
     setLoading(true)
@@ -212,9 +230,10 @@ const SociosPage = () => {
               <input ref={fileRef} type="file" accept=".xls,.xlsx" className="hidden" />
             </label>
             <button 
+              ref={importButtonRef}
               type="button" 
               onClick={() => {
-                console.log('[Frontend] Button CLICKED!')
+                console.log('[Frontend] onClick TRIGGERED!')
                 handleImport()
               }} 
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
