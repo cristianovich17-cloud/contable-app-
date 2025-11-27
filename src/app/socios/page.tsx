@@ -88,12 +88,11 @@ const SociosPage = () => {
     } catch (_) {}
   }
 
-  async function handleImport(e?: any) {
-    if (e && e.preventDefault) {
-      e.preventDefault()
-    }
+  async function handleImport() {
+    console.log('[Frontend] handleImport called')
     
     if (!fileRef.current || !fileRef.current.files || fileRef.current.files.length === 0) {
+      console.log('[Frontend] No file selected')
       alert('Por favor selecciona un archivo')
       return
     }
@@ -104,7 +103,7 @@ const SociosPage = () => {
     const fd = new FormData()
     fd.append('file', f)
     
-    console.log('[Frontend] Sending import request...')
+    console.log('[Frontend] Sending import request to /api/socios/import')
     
     try {
       const res = await fetch('/api/socios/import', { method: 'POST', body: fd })
@@ -146,7 +145,7 @@ const SociosPage = () => {
           errorMsg = `❌ FORMATO INCORRECTO\n\n`
           errorMsg += `Columnas que faltan:\n`
           errorMsg += data.missingColumns.map((col: string) => `  • ${col}`).join('\n')
-          errorMsg += `\n\nColumnas encontradas:\n`
+          errorMsg += `\n\nColumnas encontrados:\n`
           errorMsg += data.foundColumns.map((col: string) => `  • ${col}`).join('\n')
           errorMsg += `\n\n📖 Por favor revisa la guía de importación.`
         }
@@ -227,9 +226,9 @@ const SociosPage = () => {
             </div>
             <label className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
               Importar Excel
-              <input ref={fileRef} type="file" accept=".xls,.xlsx" onChange={() => console.log('[Frontend] File selected')} className="hidden" />
+              <input ref={fileRef} type="file" accept=".xls,.xlsx" className="hidden" />
             </label>
-            <button type="button" onClick={(e: any) => handleImport(e)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <button type="button" onClick={() => handleImport()} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
               Procesar Importación
             </button>
           </div>

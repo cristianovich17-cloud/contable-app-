@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     
     console.log('[Import] Validating required columns...')
     const requiredColumns = {
-      numero: ['N°', 'N', 'No', 'numero', 'n°', 'n'],
+      numero: ['N°', 'Nº', 'N', 'No', 'numero', 'n°', 'nº', 'n'],
       rut: ['RUT', 'Rut', 'rut'],
       nombre: ['Nombre completo', 'Nombre', 'nombre'],
       calidad: ['Calidad jurídica', 'Calidad juridica', 'Calidad', 'calidad']
