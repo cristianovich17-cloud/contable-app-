@@ -78,10 +78,6 @@ export async function POST(request: Request) {
       if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) hasNombre = true
       if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) hasCalidad = true
     })
-      if (requiredColumns.rut.some(col => headerLower.includes(col.toLowerCase()))) hasRUT = true
-      if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) hasNombre = true
-      if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) hasCalidad = true
-    })
 
     if (!hasNumero) missingColumns.push('N°')
     if (!hasRUT) missingColumns.push('RUT')
