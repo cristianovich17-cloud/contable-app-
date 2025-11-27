@@ -96,12 +96,19 @@ const SociosPage = () => {
     }
     
     const f = fileRef.current.files[0]
+    console.log('[Frontend] Selected file:', f.name, f.size, 'bytes')
+    
     const fd = new FormData()
     fd.append('file', f)
     
+    console.log('[Frontend] Sending import request...')
+    
     try {
       const res = await fetch('/api/socios/import', { method: 'POST', body: fd })
+      console.log('[Frontend] Response status:', res.status)
+      
       const data = await res.json()
+      console.log('[Frontend] Response data:', data)
       
       if (data.ok) {
         let message = `✅ ¡Importación exitosa!\n\n`
@@ -129,6 +136,7 @@ const SociosPage = () => {
       } else {
         // Mostrar error con formato
         let errorMsg = data.error || 'Error desconocido'
+        console.log('[Frontend] Error from server:', errorMsg)
         
         // Si es un error de formato, mostrarlo de forma clara
         if (data.missingColumns && data.missingColumns.length > 0) {
@@ -143,7 +151,7 @@ const SociosPage = () => {
         alert(errorMsg)
       }
     } catch (err) {
-      console.error('Import error:', err)
+      console.error('[Frontend] Catch error:', err)
       alert(`❌ Error durante la importación:\n${String(err)}`)
     }
   }

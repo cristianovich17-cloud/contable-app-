@@ -21,11 +21,22 @@ function normalizeRUT(rut: string): string {
 
 export async function POST(request: Request) {
   try {
+    console.log('[Import] Starting import process...')
+    
     const form = await request.formData()
     const file = form.get('file') as any
-    if (!file) return NextResponse.json({ ok: false, error: 'No file uploaded' }, { status: 400 })
+    
+    console.log('[Import] File received:', file?.name || 'NO FILE')
+    
+    if (!file) {
+      console.log('[Import] Error: No file provided')
+      return NextResponse.json({ ok: false, error: 'No file uploaded' }, { status: 400 })
+    }
 
+    console.log('[Import] Reading file buffer...')
     const arrayBuffer = await file.arrayBuffer()
+    
+    console.log('[Import] Parsing Excel...')
     const workbook = XLSX.read(arrayBuffer)
     const sheetName = workbook.SheetNames[0]
     const sheet = workbook.Sheets[sheetName]
@@ -37,6 +48,7 @@ export async function POST(request: Request) {
 
     // Validar que hay filas
     if (rows.length === 0) {
+      console.log('[Import] Error: Excel is empty')
       return NextResponse.json({ 
         ok: false, 
         error: '❌ El Excel está vacío. Por favor agrega al menos una fila de datos.' 
@@ -47,6 +59,7 @@ export async function POST(request: Request) {
     const firstRow = rows[0] || {}
     const headers = Object.keys(firstRow)
     
+    console.log('[Import] Validating required columns...')
     const requiredColumns = {
       numero: ['N°', 'N', 'No', 'numero', 'n°', 'n'],
       rut: ['RUT', 'Rut', 'rut'],
@@ -58,10 +71,11 @@ export async function POST(request: Request) {
     let hasNumero = false, hasRUT = false, hasNombre = false, hasCalidad = false
 
     headers.forEach(header => {
-      if (requiredColumns.numero.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasNumero = true
-      if (requiredColumns.rut.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasRUT = true
-      if (requiredColumns.nombre.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasNombre = true
-      if (requiredColumns.calidad.some(col => header.toLowerCase().includes(col.toLowerCase()))) hasCalidad = true
+      const headerLower = header.toLowerCase()
+      if (requiredColumns.numero.some(col => headerLower.includes(col.toLowerCase()))) hasNumero = true
+      if (requiredColumns.rut.some(col => headerLower.includes(col.toLowerCase()))) hasRUT = true
+      if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) hasNombre = true
+      if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) hasCalidad = true
     })
 
     if (!hasNumero) missingColumns.push('N°')
@@ -71,7 +85,7 @@ export async function POST(request: Request) {
 
     if (missingColumns.length > 0) {
       const errorMsg = `❌ El formato del Excel es incorrecto.\n\nFaltan estas columnas requeridas:\n${missingColumns.map(col => `  • ${col}`).join('\n')}\n\nColumnas encontradas: ${headers.join(', ')}\n\nVerifica la guía de importación para el formato correcto.`
-      console.log('[Import] Format error:', errorMsg)
+      console.log('[Import] Format error:', missingColumns)
       return NextResponse.json({ 
         ok: false, 
         error: errorMsg,
@@ -85,6 +99,8 @@ export async function POST(request: Request) {
     const errors: any[] = []
     const added: any[] = []
 
+    console.log('[Import] Starting data processing...')
+    
     rows.forEach((r, idx) => {
       // Normalize a few possible column names
       const numero = r['N°'] || r['N'] || r['No'] || r['numero'] || r['n°'] || r['n']
@@ -108,7 +124,7 @@ export async function POST(request: Request) {
 
       if (rowErrors.length) {
         errors.push({ row: idx + 2, errors: rowErrors, data: { numero, rut, nombre } })
-        console.log(`[Import] Row ${idx + 2} errors:`, rowErrors)
+        console.log(`[Import] Row ${idx + 2} has errors:`, rowErrors)
         return
       }
 
@@ -125,9 +141,9 @@ export async function POST(request: Request) {
       console.log(`[Import] Row ${idx + 2} added: ${nombre} (RUT: ${rut})`)
     })
 
-    console.log('[Import] Summary - Added:', added.length, 'Errors:', errors.length)
-    
+    console.log('[Import] Saving to database...')
     await db.write()
+    console.log('[Import] Summary - Added:', added.length, 'Errors:', errors.length)
 
     return NextResponse.json({ 
       ok: true, 
@@ -136,7 +152,8 @@ export async function POST(request: Request) {
       message: `${added.length} socio(s) importado(s). ${errors.length} error(es).`
     })
   } catch (err: any) {
-    console.error('[Import] Error:', err)
+    console.error('[Import] CRITICAL ERROR:', err)
+    console.error('[Import] Stack:', err.stack)
     return NextResponse.json({ ok: false, error: `❌ Error al procesar el archivo: ${String(err.message || err)}` }, { status: 500 })
   }
 }
