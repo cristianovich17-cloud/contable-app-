@@ -88,74 +88,57 @@ const SociosPage = () => {
     } catch (_) {}
   }
 
-  async function handleImport() {
-    console.log('[Frontend] handleImport called')
+  function handleImport() {
+    console.log('[Frontend] === handleImport CALLED ===')
+    console.log('[Frontend] fileRef.current:', fileRef.current)
     
-    if (!fileRef.current || !fileRef.current.files || fileRef.current.files.length === 0) {
-      console.log('[Frontend] No file selected')
-      alert('Por favor selecciona un archivo')
+    if (!fileRef.current) {
+      console.error('[Frontend] fileRef is null!')
+      alert('Error: referencia de archivo inválida')
       return
     }
-    
-    const f = fileRef.current.files[0]
-    console.log('[Frontend] Selected file:', f.name, f.size, 'bytes')
-    
-    const fd = new FormData()
-    fd.append('file', f)
-    
-    console.log('[Frontend] Sending import request to /api/socios/import')
-    
-    try {
-      const res = await fetch('/api/socios/import', { method: 'POST', body: fd })
-      console.log('[Frontend] Response status:', res.status)
-      
-      const data = await res.json()
-      console.log('[Frontend] Response data:', data)
-      
-      if (data.ok) {
-        let message = `✅ ¡Importación exitosa!\n\n`
-        message += `📊 Socios importados: ${data.addedCount}\n`
-        
-        if (data.errors && data.errors.length > 0) {
-          message += `⚠️ Errores encontrados: ${data.errors.length}\n\n`
-          message += 'Detalles de errores:\n'
-          data.errors.slice(0, 5).forEach((err: any) => {
-            message += `\n📍 Fila ${err.row} (${err.data?.nombre || 'Sin nombre'}):\n`
-            err.errors.forEach((e: string) => message += `   ❌ ${e}\n`)
-          })
-          if (data.errors.length > 5) {
-            message += `\n... y ${data.errors.length - 5} error(es) más`
-          }
-        }
-        
-        alert(message)
-        fetchSocios()
-        
-        // Limpiar input
-        if (fileRef.current) {
-          fileRef.current.value = ''
-        }
-      } else {
-        // Mostrar error con formato
-        let errorMsg = data.error || 'Error desconocido'
-        console.log('[Frontend] Error from server:', errorMsg)
-        
-        // Si es un error de formato, mostrarlo de forma clara
-        if (data.missingColumns && data.missingColumns.length > 0) {
-          errorMsg = `❌ FORMATO INCORRECTO\n\n`
-          errorMsg += `Columnas que faltan:\n`
-          errorMsg += data.missingColumns.map((col: string) => `  • ${col}`).join('\n')
-          errorMsg += `\n\nColumnas encontrados:\n`
-          errorMsg += data.foundColumns.map((col: string) => `  • ${col}`).join('\n')
-          errorMsg += `\n\n📖 Por favor revisa la guía de importación.`
-        }
-        
-        alert(errorMsg)
-      }
-    } catch (err) {
-      console.error('[Frontend] Catch error:', err)
-      alert(`❌ Error durante la importación:\n${String(err)}`)
+
+    if (!fileRef.current.files || fileRef.current.files.length === 0) {
+      console.warn('[Frontend] No files selected')
+      alert('Por favor selecciona un archivo Excel')
+      return
     }
+
+    const file = fileRef.current.files[0]
+    console.log('[Frontend] File selected:', file.name, `(${file.size} bytes)`)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    console.log('[Frontend] Sending POST to /api/socios/import')
+
+    fetch('/api/socios/import', {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => {
+        console.log('[Frontend] Got response, status:', res.status)
+        return res.json()
+      })
+      .then(data => {
+        console.log('[Frontend] Response JSON:', data)
+        
+        if (data.ok) {
+          alert(`✅ Importación exitosa!\n\n${data.addedCount} socios importados`)
+          fetchSocios()
+          if (fileRef.current) fileRef.current.value = ''
+        } else {
+          let msg = data.error || 'Error desconocido'
+          if (data.missingColumns) {
+            msg = `❌ Columnas faltantes:\n${data.missingColumns.join(', ')}`
+          }
+          alert(msg)
+        }
+      })
+      .catch(err => {
+        console.error('[Frontend] Fetch error:', err)
+        alert(`❌ Error: ${err.message}`)
+      })
   }
 
   async function handleSaveCuota(e: React.FormEvent) {
