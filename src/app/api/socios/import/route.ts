@@ -4,6 +4,8 @@ import * as XLSX from 'xlsx'
 import { validateSocioRow, isValidCalidad } from '@/lib/validators'
 import { generateEmailIfMissing, cleanEmail } from '@/lib/email-generator'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   try {
     const form = await request.formData()
@@ -16,8 +18,12 @@ export async function POST(request: Request) {
     const sheet = workbook.Sheets[sheetName]
     const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
 
+    console.log('[Import] Processing Excel file:', file.name)
+    console.log('[Import] Rows found:', rows.length)
+    console.log('[Import] First row sample:', rows[0])
+
     const db = await getDb()
-    const existing = db.data!.socios
+    const existing = db.data!.socios || []
     const errors: any[] = []
     const added: any[] = []
 
@@ -34,13 +40,14 @@ export async function POST(request: Request) {
       if (!rut) rowErrors.push('Falta RUT')
       if (!nombre) rowErrors.push('Falta Nombre completo')
       if (!calidad) rowErrors.push('Falta Calidad jurídica')
-      if (calidad && !isValidCalidad(calidad)) rowErrors.push('Calidad jurídica inválida')
+      if (calidad && !isValidCalidad(calidad)) rowErrors.push(`Calidad jurídica inválida: "${calidad}" (debe ser "Funcionario" o "Código del Trabajo")`)
 
       const dup = existing.find(s => s.rut === String(rut).toString() || s.numero === String(numero).toString())
-      if (dup) rowErrors.push('Duplicado con base de datos')
+      if (dup) rowErrors.push(`Duplicado: RUT ${rut} o N° ${numero} ya existe`)
 
       if (rowErrors.length) {
-        errors.push({ row: idx + 2, errors: rowErrors })
+        errors.push({ row: idx + 2, errors: rowErrors, data: { numero, rut, nombre } })
+        console.log(`[Import] Row ${idx + 2} errors:`, rowErrors)
         return
       }
 
@@ -54,12 +61,21 @@ export async function POST(request: Request) {
       }
       existing.push(nuevo)
       added.push(nuevo)
+      console.log(`[Import] Row ${idx + 2} added: ${nombre} (${rut})`)
     })
 
+    console.log('[Import] Summary - Added:', added.length, 'Errors:', errors.length)
+    
     await db.write()
 
-    return NextResponse.json({ ok: true, addedCount: added.length, errors })
+    return NextResponse.json({ 
+      ok: true, 
+      addedCount: added.length, 
+      errors,
+      message: `${added.length} socio(s) importado(s). ${errors.length} error(es).`
+    })
   } catch (err: any) {
+    console.error('[Import] Error:', err)
     return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
   }
 }

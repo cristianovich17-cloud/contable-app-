@@ -90,17 +90,48 @@ const SociosPage = () => {
 
   async function handleImport(e: React.FormEvent) {
     e.preventDefault()
-    if (!fileRef.current || !fileRef.current.files || fileRef.current.files.length === 0) return
+    if (!fileRef.current || !fileRef.current.files || fileRef.current.files.length === 0) {
+      alert('Por favor selecciona un archivo')
+      return
+    }
+    
     const f = fileRef.current.files[0]
     const fd = new FormData()
     fd.append('file', f)
-    const res = await fetch('/api/socios/import', { method: 'POST', body: fd })
-    const data = await res.json()
-    if (data.ok) {
-      alert(`Importados: ${data.addedCount}. Errores: ${data.errors?.length || 0}`)
-      fetchSocios()
-    } else {
-      alert('Error en importación: ' + (data.error || 'unknown'))
+    
+    try {
+      const res = await fetch('/api/socios/import', { method: 'POST', body: fd })
+      const data = await res.json()
+      
+      if (data.ok) {
+        let message = `✅ Importación completada!\n\n`
+        message += `📊 Socios importados: ${data.addedCount}\n`
+        
+        if (data.errors && data.errors.length > 0) {
+          message += `❌ Errores: ${data.errors.length}\n\n`
+          message += 'Detalles de errores:\n'
+          data.errors.slice(0, 5).forEach((err: any) => {
+            message += `\nFila ${err.row} (${err.data?.nombre || 'N/A'}):\n`
+            err.errors.forEach((e: string) => message += `  • ${e}\n`)
+          })
+          if (data.errors.length > 5) {
+            message += `\n... y ${data.errors.length - 5} errores más`
+          }
+        }
+        
+        alert(message)
+        fetchSocios()
+        
+        // Limpiar input
+        if (fileRef.current) {
+          fileRef.current.value = ''
+        }
+      } else {
+        alert(`❌ Error en importación:\n${data.error || 'Unknown error'}`)
+      }
+    } catch (err) {
+      console.error('Import error:', err)
+      alert(`❌ Error durante la importación:\n${String(err)}`)
     }
   }
 
