@@ -7,14 +7,14 @@ import { generateEmailIfMissing, cleanEmail } from '@/lib/email-generator'
 export const dynamic = 'force-dynamic'
 
 /**
- * Normaliza RUT removiendo puntos y espacios
- * Acepta formatos: 12345678-9, 12.345.678-9, 12345678 9
+ * Normaliza RUT removiendo puntos y espacios, convierte K a mayúscula
+ * Acepta formatos: 12345678-9, 12.345.678-9, 12345678 9, 12345678-K, 12.345.678-K
  */
 function normalizeRUT(rut: string): string {
   if (!rut) return ''
   return String(rut)
     .trim()
-    .toUpperCase()
+    .toUpperCase() // Convierte todo a mayúscula (incluyendo K)
     .replace(/\./g, '') // Remover puntos
     .replace(/\s/g, '') // Remover espacios
 }

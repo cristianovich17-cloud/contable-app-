@@ -13,7 +13,7 @@ Tu archivo Excel **DEBE tener estas columnas** (en cualquier orden):
 | Columna | Valores Válidos | Ejemplo | Requerido |
 |---------|-----------------|---------|-----------|
 | **N°** | Número único | 001, 002, 003 | ✅ SÍ |
-| **RUT** | Múltiples formatos aceptados | 12345678-9, 12.345.678-9, 12345678 9 | ✅ SÍ |
+| **RUT** | Múltiples formatos, con número o K | 12345678-9, 12345678-K, 12.345.678-K | ✅ SÍ |
 | **Nombre Completo** | Texto | Juan García | ✅ SÍ |
 | **Calidad Jurídica** | Solo 2 opciones: "Funcionario" o "Código del Trabajo" | Funcionario | ✅ SÍ |
 | **Correo Electrónico** | Email válido (opcional) | juan@example.com | ❌ NO |
@@ -41,8 +41,9 @@ El sistema acepta estas variaciones:
 **Causa:** La columna RUT está vacía
 **Solución:**
 - ✅ Asegúrate de tener una columna "RUT"
-- ✅ Formatos válidos: `12345678-9` o `12.345.678-9` o `12345678 9`
-- ✅ El sistema normaliza automáticamente
+- ✅ Formatos válidos: `12345678-9`, `12345678-K`, `12.345.678-K`, `12345678 K`
+- ✅ El sistema normaliza automáticamente (mayúscula, sin puntos)
+- ✅ Acepta números (0-9) o letra K como dígito verificador
 - ✅ No pueden repetirse RUT
 
 ### 3️⃣ "Falta Nombre completo"
