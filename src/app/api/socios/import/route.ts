@@ -69,14 +69,27 @@ export async function POST(request: Request) {
 
     const missingColumns: string[] = []
     let hasNumero = false, hasRUT = false, hasNombre = false, hasCalidad = false
+    let numeroCol: string = '', rutCol: string = '', nombreCol: string = '', calidadCol: string = ''
 
     headers.forEach(header => {
       const headerLower = header.toLowerCase().trim()
       // Búsqueda más inteligente usando includes
-      if (requiredColumns.numero.some(col => headerLower.includes(col.toLowerCase()))) hasNumero = true
-      if (requiredColumns.rut.some(col => headerLower.includes(col.toLowerCase()))) hasRUT = true
-      if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) hasNombre = true
-      if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) hasCalidad = true
+      if (requiredColumns.numero.some(col => headerLower.includes(col.toLowerCase()))) {
+        hasNumero = true
+        numeroCol = header
+      }
+      if (requiredColumns.rut.some(col => headerLower.includes(col.toLowerCase()))) {
+        hasRUT = true
+        rutCol = header
+      }
+      if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) {
+        hasNombre = true
+        nombreCol = header
+      }
+      if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) {
+        hasCalidad = true
+        calidadCol = header
+      }
     })
 
     if (!hasNumero) missingColumns.push('N°')
@@ -101,14 +114,15 @@ export async function POST(request: Request) {
     const added: any[] = []
 
     console.log('[Import] Starting data processing...')
+    console.log('[Import] Column mapping:', { numeroCol, rutCol, nombreCol, calidadCol })
     
     rows.forEach((r, idx) => {
-      // Normalize a few possible column names
-      const numero = r['N°'] || r['N'] || r['No'] || r['numero'] || r['n°'] || r['n']
-      let rut = r['RUT'] || r['Rut'] || r['rut']
-      const nombre = r['Nombre completo'] || r['Nombre'] || r['nombre']
-      const email = r['Correo electrónico'] || r['Email'] || r['correo'] || r['email']
-      const calidad = r['Calidad jurídica'] || r['Calidad juridica'] || r['Calidad'] || r['calidad']
+      // Use the mapped column names
+      const numero = r[numeroCol]
+      let rut = r[rutCol]
+      const nombre = r[nombreCol]
+      const email = r['Correo'] || r['correo'] || r['Email'] || r['email']
+      const calidad = r[calidadCol]
 
       // Normalizar RUT
       rut = normalizeRUT(rut)
