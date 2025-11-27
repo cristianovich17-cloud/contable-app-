@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import * as XLSX from 'xlsx'
 import { validateSocioRow, isValidCalidad } from '@/lib/validators'
+import { generateEmailIfMissing, cleanEmail } from '@/lib/email-generator'
 
 export async function POST(request: Request) {
   try {
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
         numero: String(numero),
         rut: String(rut),
         nombre: String(nombre),
-        email: String(email || ''),
+        email: cleanEmail(generateEmailIfMissing(String(nombre), email)),
         estado: 'Activo',
         calidadJuridica: String(calidad)
       }

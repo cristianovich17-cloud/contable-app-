@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma-db';
 export const dynamic = 'force-dynamic';
 import { validateJWT, hasPermission } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { generateEmailIfMissing, cleanEmail } from '@/lib/email-generator';
 
 export async function GET(request: Request) {
   try {
@@ -34,7 +35,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { numero, nombre, email, telefono, estado } = body;
+    let { numero, nombre, email, telefono, estado } = body;
+
+    // Generar correo si no lo proporciona
+    email = generateEmailIfMissing(nombre, email);
+    email = cleanEmail(email);
 
     const socio = await prisma.socio.create({
       data: { numero, nombre, email, telefono, estado: estado || 'activo' },
