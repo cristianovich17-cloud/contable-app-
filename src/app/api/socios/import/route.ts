@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getDb } from '@/lib/db'
+import { prisma } from '@/lib/prisma-db'
 import * as XLSX from 'xlsx'
 import { validateSocioRow, isValidCalidad } from '@/lib/validators'
 import { generateEmailIfMissing, cleanEmail } from '@/lib/email-generator'
@@ -113,15 +113,15 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    const db = await getDb()
-    const existing = db.data!.socios || []
+    const existing = await prisma.socio.findMany()
     const errors: any[] = []
     const added: any[] = []
 
     console.log('[Import] Starting data processing...')
     console.log('[Import] Column mapping:', { numeroCol, rutCol, nombreCol, calidadCol })
     
-    rows.forEach((r, idx) => {
+    for (let idx = 0; idx < rows.length; idx++) {
+      const r = rows[idx]
       // Use the mapped column names
       const numero = r[numeroCol]
       let rut = r[rutCol]
@@ -145,24 +145,30 @@ export async function POST(request: Request) {
       if (rowErrors.length) {
         errors.push({ row: idx + 2, errors: rowErrors, data: { numero, rut, nombre } })
         console.log(`[Import] Row ${idx + 2} has errors:`, rowErrors)
-        return
+        continue
       }
 
-      const nuevo = {
-        numero: String(numero),
-        rut: rut,
-        nombre: String(nombre),
-        email: cleanEmail(generateEmailIfMissing(String(nombre), email)),
-        estado: 'Activo',
-        calidadJuridica: String(calidad)
+      try {
+        const emailGenerado = cleanEmail(generateEmailIfMissing(String(nombre), email))
+        const nuevo = await prisma.socio.create({
+          data: {
+            numero: String(numero),
+            rut: rut,
+            nombre: String(nombre),
+            email: emailGenerado,
+            estado: 'Activo',
+            calidadJuridica: String(calidad)
+          }
+        })
+        added.push(nuevo)
+        console.log(`[Import] Row ${idx + 2} added: ${nombre} (RUT: ${rut})`)
+      } catch (err: any) {
+        console.error(`[Import] Row ${idx + 2} creation error:`, err.message)
+        errors.push({ row: idx + 2, errors: [`Error al crear: ${err.message}`], data: { numero, rut, nombre } })
       }
-      existing.push(nuevo)
-      added.push(nuevo)
-      console.log(`[Import] Row ${idx + 2} added: ${nombre} (RUT: ${rut})`)
-    })
+    }
 
-    console.log('[Import] Saving to database...')
-    await db.write()
+    console.log('[Import] Saving completed...')
     console.log('[Import] Summary - Added:', added.length, 'Errors:', errors.length)
 
     return NextResponse.json({ 
