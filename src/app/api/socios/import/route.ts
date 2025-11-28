@@ -73,22 +73,27 @@ export async function POST(request: Request) {
 
     headers.forEach(header => {
       const headerLower = header.toLowerCase().trim()
-      // Búsqueda más inteligente usando includes
-      if (requiredColumns.numero.some(col => headerLower.includes(col.toLowerCase()))) {
+      
+      // Búsqueda flexible - si contiene la palabra clave principal, la acepta
+      if (!hasNumero && (headerLower.includes('n°') || headerLower.includes('nº') || headerLower === 'n' || headerLower.includes('numero'))) {
         hasNumero = true
         numeroCol = header
+        console.log('[Import] Found numero column:', header)
       }
-      if (requiredColumns.rut.some(col => headerLower.includes(col.toLowerCase()))) {
+      if (!hasRUT && (headerLower.includes('rut'))) {
         hasRUT = true
         rutCol = header
+        console.log('[Import] Found RUT column:', header)
       }
-      if (requiredColumns.nombre.some(col => headerLower.includes(col.toLowerCase()))) {
+      if (!hasNombre && (headerLower.includes('nombre'))) {
         hasNombre = true
         nombreCol = header
+        console.log('[Import] Found nombre column:', header)
       }
-      if (requiredColumns.calidad.some(col => headerLower.includes(col.toLowerCase()))) {
+      if (!hasCalidad && (headerLower.includes('calidad') || headerLower.includes('juridica') || headerLower.includes('jurídica'))) {
         hasCalidad = true
         calidadCol = header
+        console.log('[Import] Found calidad column:', header)
       }
     })
 
