@@ -171,6 +171,31 @@ const SociosPage = () => {
       })
   }
 
+  async function handleDeleteSocio(socio: Socio) {
+    if (!confirm(`¿Estás seguro de que quieres eliminar a ${socio.nombre}?\n\nEsta acción no se puede deshacer.`)) {
+      return
+    }
+
+    setLoadingAction(prev => ({ ...prev, [socio.numero]: true }))
+    try {
+      const res = await fetch(`/api/socios/${socio.numero}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const data = await res.json()
+      if (data.ok) {
+        alert(`✅ Socio eliminado: ${data.message}`)
+        fetchSocios() // Recargar lista
+      } else {
+        alert(`❌ Error: ${data.error}`)
+      }
+    } catch (err: any) {
+      alert(`❌ Error al eliminar: ${err.message}`)
+    } finally {
+      setLoadingAction(prev => ({ ...prev, [socio.numero]: false }))
+    }
+  }
+
   async function handleSaveCuota(e: React.FormEvent) {
     e.preventDefault()
     setSavingCuota(true)
@@ -354,6 +379,7 @@ const SociosPage = () => {
                 <th className="py-3 px-4 uppercase font-semibold text-sm">Email</th>
                 <th className="py-3 px-4 uppercase font-semibold text-sm">Calidad</th>
                 <th className="py-3 px-4 uppercase font-semibold text-sm">Estado</th>
+                <th className="py-3 px-4 uppercase font-semibold text-sm">Acciones</th>
               </tr>
             </thead>
             <tbody className="text-gray-200">
@@ -428,6 +454,13 @@ const SociosPage = () => {
                           className="bg-purple-600 text-white px-2 py-1 rounded text-sm"
                         >
                           Boleta
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSocio(s)}
+                          disabled={loadingAction[s.numero]}
+                          className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm disabled:opacity-50"
+                        >
+                          {loadingAction[s.numero] ? 'Eliminando...' : '🗑️ Eliminar'}
                         </button>
                     </div>
 
