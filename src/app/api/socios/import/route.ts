@@ -139,8 +139,8 @@ export async function POST(request: Request) {
       if (!calidad) rowErrors.push('Falta Calidad jurídica')
       if (calidad && !isValidCalidad(calidad)) rowErrors.push(`Calidad jurídica inválida: "${calidad}" (debe ser "Funcionario" o "Código del Trabajo")`)
 
-      const dup = existing.find(s => s.rut === rut || s.numero === String(numero).toString())
-      if (dup) rowErrors.push(`Duplicado: RUT ${rut} o N° ${numero} ya existe`)
+      const dup = existing.find(s => s.rut === rut)
+      if (dup) rowErrors.push(`Duplicado: RUT ${rut} ya existe`)
 
       if (rowErrors.length) {
         errors.push({ row: idx + 2, errors: rowErrors, data: { numero, rut, nombre } })
@@ -150,13 +150,19 @@ export async function POST(request: Request) {
 
       try {
         const emailGenerado = cleanEmail(generateEmailIfMissing(String(nombre), email))
+        const numeroInt = parseInt(String(numero), 10)
+        if (isNaN(numeroInt)) {
+          errors.push({ row: idx + 2, errors: [`N° debe ser un número válido`], data: { numero, rut, nombre } })
+          console.log(`[Import] Row ${idx + 2} invalid numero: ${numero}`)
+          continue
+        }
         const nuevo = await prisma.socio.create({
           data: {
-            numero: String(numero),
+            numero: numeroInt,
             rut: rut,
             nombre: String(nombre),
             email: emailGenerado,
-            estado: 'Activo',
+            estado: 'activo',
             calidadJuridica: String(calidad)
           }
         })
