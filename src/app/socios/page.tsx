@@ -64,10 +64,17 @@ const SociosPage = () => {
   }, [])
 
   async function fetchSocios() {
+    console.log('[Frontend] fetchSocios called')
     setLoading(true)
-    const res = await fetch('/api/socios')
-    const data = await res.json()
-    setSocios(data.socios || [])
+    try {
+      const res = await fetch('/api/socios')
+      const data = await res.json()
+      console.log('[Frontend] fetchSocios response:', data)
+      setSocios(data.socios || [])
+      console.log('[Frontend] Socios set to:', data.socios?.length || 0, 'items')
+    } catch (err) {
+      console.error('[Frontend] fetchSocios error:', err)
+    }
     setLoading(false)
   }
 
@@ -142,8 +149,13 @@ const SociosPage = () => {
         console.log('[Frontend] Response JSON:', data)
         
         if (data.ok) {
+          console.log('[Frontend] Import successful, calling fetchSocios')
           alert(`✅ Importación exitosa!\n\n${data.addedCount} socios importados`)
-          fetchSocios()
+          // Usar setTimeout para asegurar que se ejecuta después
+          setTimeout(() => {
+            console.log('[Frontend] Executing fetchSocios after import')
+            fetchSocios()
+          }, 100)
           if (fileRef.current) fileRef.current.value = ''
         } else {
           let msg = data.error || 'Error desconocido'
