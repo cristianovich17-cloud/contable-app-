@@ -6,11 +6,10 @@
  * 
  * Si el socio ya tiene un correo válido, lo retorna sin cambios.
  * 
- * Formato generado: {nombre-normalizado}@contable.app
+ * Formato generado: {iniciales-o-primer-palabra}@contable.app
  * - Acentos removidos
- * - Espacios y caracteres especiales reemplazados con puntos
+ * - Usa iniciales de palabras principales (nombre + primer apellido)
  * - Convertido a minúsculas
- * - Puntos múltiples colapsados
  * 
  * @param nombre - Nombre del socio (requerido)
  * @param email - Correo del socio (opcional)
@@ -23,16 +22,36 @@ export function generateEmailIfMissing(nombre: string, email?: string): string {
   }
 
   // Generar correo a partir del nombre
-  // Proceso: normalizar nombre → minúsculas → remover acentos → reemplazar especiales con puntos
-  const emailBase = nombre
+  // Procesa: nombre normalizado → remover acentos → tomar iniciales o palabras cortas
+  const normalized = nombre
     .toLowerCase()
     .trim()
     // Remover acentos y caracteres especiales
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remover diacríticos
-    .replace(/[^a-z0-9]/g, '.') // Reemplazar caracteres no alfanuméricos con punto
-    .replace(/\.+/g, '.') // Remover puntos múltiples
-    .replace(/^\.+|\.+$/g, ''); // Remover puntos al inicio/final
+    .replace(/[\u0300-\u036f]/g, ''); // Remover diacríticos
+
+  // Dividir en palabras
+  const words = normalized
+    .replace(/[^a-z\s]/g, '') // Remover caracteres no alfanuméricos
+    .split(/\s+/)
+    .filter(w => w.length > 0);
+
+  let emailBase = '';
+  
+  if (words.length === 0) {
+    emailBase = 'usuario';
+  } else if (words.length === 1) {
+    // Si solo hay una palabra, usar primeras 5 letras o la palabra completa si es más corta
+    emailBase = words[0].substring(0, 5);
+  } else {
+    // Si hay 2+ palabras: tomar inicial de nombre + primer apellido completo (máx 8 caracteres)
+    const firstName = words[0][0]; // Primera letra del primer nombre
+    const lastName = words[1].substring(0, 7); // Primeras 7 letras del primer apellido
+    emailBase = (firstName + lastName).substring(0, 8);
+  }
+
+  // Asegurar que no esté vacío
+  emailBase = emailBase || 'usuario';
 
   return `${emailBase}@contable.app`;
 }
