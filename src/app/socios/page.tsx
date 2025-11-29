@@ -26,6 +26,8 @@ const SociosPage = () => {
   const importButtonRef = useRef<HTMLButtonElement | null>(null)
   const [cuotaBienestar, setCuotaBienestar] = useState<number>(0)
   const [cuotaOrdinaria, setCuotaOrdinaria] = useState<number>(0)
+  const [cuotaMes, setCuotaMes] = useState<number>(new Date().getMonth() + 1)
+  const [cuotaAño, setCuotaAño] = useState<number>(new Date().getFullYear())
   const [savingCuota, setSavingCuota] = useState(false)
   const [discountForms, setDiscountForms] = useState<Record<string, { tipo: string; monto: number; descripcion: string }>>({})
   const [creditForms, setCreditForms] = useState<Record<string, { montoTotal: number; cuotas: number; descripcion: string }>>({})
@@ -260,11 +262,16 @@ const SociosPage = () => {
       const res = await fetch('/api/config/cuotas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bienestar: cuotaBienestar, ordinaria: cuotaOrdinaria })
+        body: JSON.stringify({ 
+          bienestar: cuotaBienestar, 
+          ordinaria: cuotaOrdinaria,
+          mes: cuotaMes,
+          año: cuotaAño
+        })
       })
       const data = await res.json()
       if (data.ok) {
-        alert('Cuotas guardadas')
+        alert(`✅ Cuotas guardadas para ${cuotaMes}/${cuotaAño}`)
       } else {
         alert('Error guardando cuotas: ' + (data.error || ''))
       }
@@ -416,7 +423,19 @@ const SociosPage = () => {
         <div className="overflow-x-auto">
           <div className="mb-6 p-4 bg-gray-800 rounded border border-gray-700">
             <h2 className="text-lg font-semibold mb-2 text-white">Configuración de Cuotas</h2>
-            <form onSubmit={handleSaveCuota} className="flex items-end gap-4">
+            <form onSubmit={handleSaveCuota} className="flex items-end gap-4 flex-wrap">
+              <div>
+                <label className="block text-sm text-gray-300">Mes</label>
+                <select value={cuotaMes} onChange={e => setCuotaMes(Number(e.target.value))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded w-32">
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                    <option key={m} value={m}>{['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m-1]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300">Año</label>
+                <input type="number" value={cuotaAño} onChange={e => setCuotaAño(Number(e.target.value))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded w-32" />
+              </div>
               <div>
                 <label className="block text-sm text-gray-300">Cuota Bienestar</label>
                 <input type="number" value={cuotaBienestar} onChange={e => setCuotaBienestar(Number(e.target.value))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded w-40" />
