@@ -178,13 +178,8 @@ const SociosPage = () => {
 
     setLoadingAction(prev => ({ ...prev, [socio.numero]: true }))
     try {
-      const token = localStorage.getItem('token')
       const res = await fetch(`/api/socios/${socio.numero}`, {
-        method: 'DELETE',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+        method: 'DELETE'
       })
       const data = await res.json()
       if (data.ok) {
