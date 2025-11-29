@@ -48,14 +48,12 @@ export async function POST(request: NextRequest, { params }: { params: { numero:
       }
     })
     
-    const installmentsDue = credits.reduce((s: number, c: any) => {
-      const remaining = Number(c.cuotasPagadas || 0)
-      if (remaining <= 0) return s
-      return s + (Number(c.monto || 0) / Math.max(1, Number(c.cuotasPagadas || 1)))
-    }, 0)
+    // Sumar directamente los montos de los créditos pendientes
+    const installmentsDue = credits.reduce((s: number, c: any) => s + Number(c.monto || 0), 0)
 
-    const totalDescuentos = sumDiscounts + installmentsDue
-    const totalAPagar = Math.max(0, cuotaAFUT - totalDescuentos)
+    const totalDescuentos = sumDiscounts
+    const totalCreditos = installmentsDue
+    const totalAPagar = Math.max(0, cuotaAFUT - totalDescuentos + totalCreditos)
 
     // Crear recibo
     const recibo = await prisma.recibo.create({
@@ -75,8 +73,9 @@ export async function POST(request: NextRequest, { params }: { params: { numero:
       periodo: { month, year },
       cuotaAFUT,
       discounts: discounts.map(d => ({ monto: d.monto, concepto: d.concepto })),
-      installmentsDue,
-      totalDescuentos,
+      credits: credits.map(c => ({ monto: c.monto, concepto: c.concepto })),
+      sumDiscounts,
+      sumCredits,
       totalAPagar,
       generatedAt: new Date().toISOString()
     }

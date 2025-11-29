@@ -39,6 +39,15 @@ export async function GET(request: NextRequest, { params }: { params: { numero: 
     })
     const sumDiscounts = discounts.reduce((s: number, d: any) => s + Number(d.monto || 0), 0)
 
+    // Obtener créditos pendientes
+    const credits = await prisma.credito.findMany({
+      where: {
+        socioId: socio.id,
+        estado: 'pendiente'
+      }
+    })
+    const sumCredits = credits.reduce((s: number, c: any) => s + Number(c.monto || 0), 0)
+
     // Crear documento PDF
     const doc = new PDFDocument({ size: 'A4', margin: 40 })
     const chunks: any[] = []
@@ -155,22 +164,39 @@ export async function GET(request: NextRequest, { params }: { params: { numero: 
       doc.moveDown(0.2)
     }
 
+    // Créditos pendientes
+    if (sumCredits > 0) {
+      doc.font('Helvetica-Bold').fontSize(11).fillColor('#ff6b00').text('CRÉDITOS PENDIENTES')
+      doc.font('Helvetica').fontSize(10).fillColor('#000000')
+      doc.moveDown(0.2)
+      
+      for (const credit of credits) {
+        doc.text(`• ${credit.concepto || 'Crédito'}`, col1 + 10)
+        doc.text(`$${credit.monto.toLocaleString('es-CL')}`, col2)
+        doc.text(`+$${credit.monto.toLocaleString('es-CL')}`, col3)
+        doc.moveDown(0.2)
+      }
+      doc.moveDown(0.2)
+    }
+
     // Total a pagar
-    const totalAPagar = Math.max(0, cuotaAFUT - sumDiscounts)
+    const totalAPagar = Math.max(0, cuotaAFUT - sumDiscounts + sumCredits)
     
     const totalBg = doc.y
-    doc.rect(40, totalBg, 515, 50).fillAndStroke('#e8f4f8', '#0099cc').lineWidth(2)
+    doc.rect(40, totalBg, 515, 65).fillAndStroke('#e8f4f8', '#0099cc').lineWidth(2)
     doc.fillColor('#000000')
     
     doc.y = totalBg + 5
-    doc.fontSize(12).font('Helvetica')
-    doc.text(`Total Descuentos: $${sumDiscounts.toLocaleString('es-CL')}`, 50)
+    doc.fontSize(11).font('Helvetica')
+    doc.text(`Total Descuentos: -$${sumDiscounts.toLocaleString('es-CL')}`, 50)
+    doc.moveDown(0.25)
+    doc.text(`Total Créditos: +$${sumCredits.toLocaleString('es-CL')}`, 50)
     doc.moveDown(0.3)
     
     doc.fontSize(16).font('Helvetica-Bold').fillColor('#0099cc')
     doc.text(`TOTAL A PAGAR: $${totalAPagar.toLocaleString('es-CL')}`, 50)
     
-    doc.y = totalBg + 50
+    doc.y = totalBg + 65
     doc.moveDown(1)
 
     // Instrucciones de pago
