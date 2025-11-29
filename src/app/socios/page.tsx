@@ -21,6 +21,7 @@ const SociosPage = () => {
   
   const [socios, setSocios] = useState<Socio[]>([])
   const [loading, setLoading] = useState(false)
+  const [selectedSocios, setSelectedSocios] = useState<Set<string>>(new Set())
   const fileRef = useRef<HTMLInputElement | null>(null)
   const importButtonRef = useRef<HTMLButtonElement | null>(null)
   const [cuotaBienestar, setCuotaBienestar] = useState<number>(0)
@@ -195,6 +196,63 @@ const SociosPage = () => {
     }
   }
 
+  function toggleSocioSelection(numero: string) {
+    setSelectedSocios(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(numero)) {
+        newSet.delete(numero)
+      } else {
+        newSet.add(numero)
+      }
+      return newSet
+    })
+  }
+
+  function selectAllSocios() {
+    if (selectedSocios.size === socios.length) {
+      setSelectedSocios(new Set())
+    } else {
+      setSelectedSocios(new Set(socios.map(s => s.numero)))
+    }
+  }
+
+  async function handleDeleteMultipleSocios() {
+    if (selectedSocios.size === 0) {
+      alert('Por favor selecciona al menos un socio para eliminar')
+      return
+    }
+
+    const count = selectedSocios.size
+    if (!confirm(`¿Estás seguro de que quieres eliminar ${count} socio(s)?\n\nEsta acción no se puede deshacer.`)) {
+      return
+    }
+
+    setLoadingAction(prev => ({ ...prev, bulk_delete: true }))
+    let deleted = 0
+    let failed = 0
+
+    for (const numero of selectedSocios) {
+      try {
+        const res = await fetch(`/api/socios/${numero}`, {
+          method: 'DELETE'
+        })
+        const data = await res.json()
+        if (data.ok) {
+          deleted++
+        } else {
+          failed++
+        }
+      } catch (err) {
+        failed++
+      }
+    }
+
+    setLoadingAction(prev => ({ ...prev, bulk_delete: false }))
+    alert(`✅ Eliminación completada: ${deleted} socios eliminados, ${failed} fallos`)
+    setSelectedSocios(new Set())
+    fetchSocios()
+  }
+
   async function handleSaveCuota(e: React.FormEvent) {
     e.preventDefault()
     setSavingCuota(true)
@@ -276,6 +334,15 @@ const SociosPage = () => {
             >
               Procesar Importación
             </button>
+            {selectedSocios.size > 0 && (
+              <button
+                onClick={handleDeleteMultipleSocios}
+                disabled={loadingAction.bulk_delete}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+              >
+                {loadingAction.bulk_delete ? '🗑️ Eliminando...' : `🗑️ Eliminar ${selectedSocios.size} seleccionados`}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -372,6 +439,14 @@ const SociosPage = () => {
           <table className="min-w-full bg-gray-900">
             <thead className="bg-gray-800 text-white">
               <tr>
+                <th className="py-3 px-4 w-8">
+                  <input
+                    type="checkbox"
+                    checked={selectedSocios.size === socios.length && socios.length > 0}
+                    onChange={selectAllSocios}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                </th>
                 <th className="py-3 px-4 uppercase font-semibold text-sm">N°</th>
                 <th className="py-3 px-4 uppercase font-semibold text-sm">RUT</th>
                 <th className="py-3 px-4 uppercase font-semibold text-sm">Nombre</th>
@@ -383,7 +458,15 @@ const SociosPage = () => {
             </thead>
             <tbody className="text-gray-200">
               {socios.map((s) => (
-                <tr key={s.rut + s.numero} className="border-t border-gray-700 hover:bg-gray-800">
+                <tr key={s.rut + s.numero} className={`border-t border-gray-700 hover:bg-gray-800 ${selectedSocios.has(s.numero) ? 'bg-gray-700' : ''}`}>
+                  <td className="py-3 px-4 w-8">
+                    <input
+                      type="checkbox"
+                      checked={selectedSocios.has(s.numero)}
+                      onChange={() => toggleSocioSelection(s.numero)}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                  </td>
                   <td className="py-3 px-4">{s.numero}</td>
                   <td className="py-3 px-4">{s.rut}</td>
                   <td className="py-3 px-4">{s.nombre}</td>
