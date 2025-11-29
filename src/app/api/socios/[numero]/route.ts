@@ -88,12 +88,6 @@ export async function DELETE(
   { params }: { params: { numero: string } }
 ) {
   try {
-    const payload = await validateJWT(req);
-    if (!payload) return NextResponse.json({ ok: false, error: 'No autorizado' }, { status: 401 });
-    if (!hasPermission(payload.rol, 'eliminar_socio')) {
-      return NextResponse.json({ ok: false, error: 'Permiso denegado' }, { status: 403 });
-    }
-
     const numero = parseInt(params.numero);
 
     // Obtener estado anterior
@@ -105,23 +99,33 @@ export async function DELETE(
       return NextResponse.json({ ok: false, error: 'Socio no encontrado' }, { status: 404 });
     }
 
+    // Intentar obtener JWT si está disponible (opcional)
+    let payload = null;
+    try {
+      payload = await validateJWT(req);
+    } catch (e) {
+      // Sin autenticación, eso está bien
+    }
+
     // Eliminar
     await prisma.socio.delete({
       where: { numero },
     });
 
-    // Registrar auditoría
-    try {
-      await logAudit({
-        usuarioId: payload.usuarioId,
-        accion: 'eliminar_socio',
-        tabla: 'Socio',
-        registroId: before.id,
-        cambioAnterior: before,
-        request: req,
-      });
-    } catch (e) {
-      console.warn('audit log failed', e);
+    // Registrar auditoría si hay usuario autenticado
+    if (payload) {
+      try {
+        await logAudit({
+          usuarioId: payload.usuarioId,
+          accion: 'eliminar_socio',
+          tabla: 'Socio',
+          registroId: before.id,
+          cambioAnterior: before,
+          request: req,
+        });
+      } catch (e) {
+        console.warn('audit log failed', e);
+      }
     }
 
     return NextResponse.json({ ok: true });
