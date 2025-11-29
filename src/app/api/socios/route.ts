@@ -35,14 +35,19 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let { numero, nombre, email, telefono, estado } = body;
+    let { numero, nombre, email, telefono, estado, rut } = body;
 
     // Generar correo si no lo proporciona
     email = generateEmailIfMissing(nombre, email);
     email = cleanEmail(email);
 
+    // RUT debe ser requerido
+    if (!rut) {
+      return NextResponse.json({ ok: false, error: 'RUT es requerido' }, { status: 400 });
+    }
+
     const socio = await prisma.socio.create({
-      data: { numero, nombre, email, telefono, estado: estado || 'activo' },
+      data: { numero, nombre, email, telefono, rut, estado: estado || 'activo' },
     });
 
     // Registrar auditoría

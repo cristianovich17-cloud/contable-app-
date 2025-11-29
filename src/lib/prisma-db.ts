@@ -111,7 +111,7 @@ export async function getDb(): Promise<DbInstance> {
   };
 }
 
-export async function createSocio(data: { numero: number; nombre: string; email?: string; telefono?: string }) {
+export async function createSocio(data: { numero: number; nombre: string; rut: string; email?: string; telefono?: string }) {
   return prisma.socio.create({ data });
 }
 

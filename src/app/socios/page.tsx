@@ -29,7 +29,7 @@ const SociosPage = () => {
   const [cuotaMes, setCuotaMes] = useState<number>(new Date().getMonth() + 1)
   const [cuotaAño, setCuotaAño] = useState<number>(new Date().getFullYear())
   const [savingCuota, setSavingCuota] = useState(false)
-  const [discountForms, setDiscountForms] = useState<Record<string, { tipo: string; monto: number; descripcion: string }>>({})
+  const [discountForms, setDiscountForms] = useState<Record<string, { monto: number; concepto: string; mes: number; año: number }>>({})
   const [creditForms, setCreditForms] = useState<Record<string, { montoTotal: number; cuotas: number; descripcion: string }>>({})
   const [paymentForms, setPaymentForms] = useState<Record<string, { amount: number; tipo: string; creditId?: string }>>({})
   const [creditsCache, setCreditsCache] = useState<Record<string, any[]>>({})
@@ -497,7 +497,7 @@ const SociosPage = () => {
                       <button
                         onClick={async () => {
                           // toggle discount form
-                          setDiscountForms(prev => ({ ...prev, [s.numero]: prev[s.numero] ? undefined as any : { tipo: 'Descuento', monto: 0, descripcion: '' } }))
+                          setDiscountForms(prev => ({ ...prev, [s.numero]: prev[s.numero] ? undefined as any : { monto: 0, concepto: '', mes: cuotaMes, año: cuotaAño } }))
                         }}
                         className="bg-yellow-400 text-black px-2 py-1 rounded text-sm"
                       >
@@ -568,9 +568,10 @@ const SociosPage = () => {
                     {/* Discount form */}
                     {discountForms[s.numero] && (
                       <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
-                        <input placeholder="Tipo" value={discountForms[s.numero].tipo} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], tipo: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
                         <input type="number" placeholder="Monto" value={discountForms[s.numero].monto} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], monto: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-32 text-sm" />
-                        <input placeholder="Descripción" value={discountForms[s.numero].descripcion} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], descripcion: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
+                        <input placeholder="Concepto" value={discountForms[s.numero].concepto} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], concepto: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
+                        <input type="number" placeholder="Mes" min="1" max="12" value={discountForms[s.numero].mes} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], mes: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-20 text-sm" />
+                        <input type="number" placeholder="Año" value={discountForms[s.numero].año} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], año: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
                         <button onClick={async () => {
                           const f = discountForms[s.numero]
                           if (!f) return

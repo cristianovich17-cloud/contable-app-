@@ -1,14 +1,32 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { getDb } from '@/lib/db'
+import { prisma } from '@/lib/prisma-db'
 import { validateJWT } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 
 export async function GET(request: Request, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
-    const db = await getDb()
-    const discounts = (db.data!.discounts || []).filter((d: any) => String(d.numero) === String(numero))
-    return NextResponse.json({ ok: true, discounts })
+    const numero = parseInt(params.numero, 10)
+    const q = new URL(request.url).searchParams
+    const month = q.get('month')
+    const year = q.get('year')
+
+    // Obtener socio
+    const socio = await prisma.socio.findUnique({
+      where: { numero }
+    })
+    if (!socio) {
+      return NextResponse.json({ ok: true, descuentos: [] })
+    }
+
+    // Filtrar por mes/año si se especifican
+    const where: any = { socioId: socio.id }
+    if (month) where.mes = parseInt(month)
+    if (year) where.año = parseInt(year)
+
+    const discounts = await prisma.descuento.findMany({
+      where
+    })
+    return NextResponse.json({ ok: true, descuentos: discounts })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
   }
@@ -16,23 +34,32 @@ export async function GET(request: Request, { params }: { params: { numero: stri
 
 export async function POST(request: NextRequest, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
+    const numero = parseInt(params.numero, 10)
     const payload = await request.json()
-    // expected: { tipo, monto, descripcion, fecha }
+    // expected: { monto, concepto, mes, año }
     const monto = Number(payload.monto || 0)
-    const tipo = String(payload.tipo || 'Descuento')
-    const descripcion = String(payload.descripcion || '')
-    const fecha = payload.fecha || new Date().toISOString()
+    const concepto = String(payload.concepto || payload.descripcion || 'Descuento aplicado')
+    const mes = Number(payload.mes || new Date().getMonth() + 1)
+    const año = Number(payload.año || new Date().getFullYear())
 
-    const db = await getDb()
-    const item = { id: Date.now().toString(), numero: String(numero), tipo, monto, descripcion, fecha }
-    if (!db.data) db.data = {
-      socios: [], cuotaConfig: {}, descuentos: [], credits: [], creditos: [],
-      pagos: [], recibos: [], transacciones: [], transactions: [], ingresos: [], egresos: [], sentEmails: []
-    } as any
-    if (!db.data.discounts) db.data.discounts = []
-    db.data.discounts.push(item)
-    await db.write()
+    // Obtener socio
+    const socio = await prisma.socio.findUnique({
+      where: { numero }
+    })
+    if (!socio) {
+      return NextResponse.json({ ok: false, error: 'Socio no encontrado' }, { status: 404 })
+    }
+
+    // Crear descuento
+    const discount = await prisma.descuento.create({
+      data: {
+        socioId: socio.id,
+        monto,
+        concepto,
+        mes,
+        año
+      }
+    })
 
     // Log de auditoría
     const userPayload = await validateJWT(request)
@@ -40,14 +67,14 @@ export async function POST(request: NextRequest, { params }: { params: { numero:
       await logAudit({
         usuarioId: userPayload.usuarioId,
         accion: 'CREAR',
-        tabla: 'discounts',
-        registroId: parseInt(item.id),
-        cambioNuevo: item,
+        tabla: 'Descuento',
+        registroId: discount.id,
+        cambioNuevo: discount as any,
         request
       })
     }
 
-    return NextResponse.json({ ok: true, discount: item })
+    return NextResponse.json({ ok: true, descuento: discount })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
   }
@@ -55,38 +82,41 @@ export async function POST(request: NextRequest, { params }: { params: { numero:
 
 export async function PUT(request: NextRequest, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
+    const numero = parseInt(params.numero, 10)
     const payload = await request.json()
-    const id = String(payload.id || '')
+    const id = Number(payload.id || 0)
     if (!id) return NextResponse.json({ ok: false, error: 'id requerido' }, { status: 400 })
 
-    const db = await getDb()
-    const list = db.data!.discounts || []
-    const idx = list.findIndex((d: any) => String(d.id) === id && String(d.numero) === String(numero))
-    if (idx === -1) return NextResponse.json({ ok: false, error: 'Descuento no encontrado' }, { status: 404 })
+    const socio = await prisma.socio.findUnique({ where: { numero } })
+    if (!socio) return NextResponse.json({ ok: false, error: 'Socio no encontrado' }, { status: 404 })
 
-    const antes = { ...list[idx] }
-    if (payload.monto !== undefined) list[idx].monto = Number(payload.monto)
-    if (payload.tipo !== undefined) list[idx].tipo = String(payload.tipo)
-    if (payload.descripcion !== undefined) list[idx].descripcion = String(payload.descripcion)
-    if (payload.fecha !== undefined) list[idx].fecha = payload.fecha
+    const antes = await prisma.descuento.findUnique({ where: { id } })
+    if (!antes) return NextResponse.json({ ok: false, error: 'Descuento no encontrado' }, { status: 404 })
 
-    await db.write()
+    const updated = await prisma.descuento.update({
+      where: { id },
+      data: {
+        monto: payload.monto !== undefined ? Number(payload.monto) : undefined,
+        concepto: payload.concepto !== undefined ? String(payload.concepto) : undefined,
+        mes: payload.mes !== undefined ? Number(payload.mes) : undefined,
+        año: payload.año !== undefined ? Number(payload.año) : undefined
+      }
+    })
 
     const userPayload = await validateJWT(request)
     if (userPayload) {
       await logAudit({
         usuarioId: userPayload.usuarioId,
         accion: 'EDITAR',
-        tabla: 'discounts',
-        registroId: parseInt(id),
-        cambioAnterior: antes,
-        cambioNuevo: list[idx],
+        tabla: 'Descuento',
+        registroId: id,
+        cambioAnterior: antes as any,
+        cambioNuevo: updated as any,
         request
       })
     }
 
-    return NextResponse.json({ ok: true, discount: list[idx] })
+    return NextResponse.json({ ok: true, descuento: updated })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
   }
@@ -94,28 +124,29 @@ export async function PUT(request: NextRequest, { params }: { params: { numero: 
 
 export async function DELETE(request: NextRequest, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
+    const numero = parseInt(params.numero, 10)
     const payload = await request.json()
-    const id = String(payload.id || '')
+    const id = Number(payload.id || 0)
     if (!id) return NextResponse.json({ ok: false, error: 'id requerido' }, { status: 400 })
 
-    const db = await getDb()
-    const list = db.data!.discounts || []
-    const idx = list.findIndex((d: any) => String(d.id) === id && String(d.numero) === String(numero))
-    if (idx === -1) return NextResponse.json({ ok: false, error: 'Descuento no encontrado' }, { status: 404 })
+    const socio = await prisma.socio.findUnique({ where: { numero } })
+    if (!socio) return NextResponse.json({ ok: false, error: 'Socio no encontrado' }, { status: 404 })
 
-    const antes = { ...list[idx] }
-    list.splice(idx, 1)
-    await db.write()
+    const antes = await prisma.descuento.findUnique({ where: { id } })
+    if (!antes || antes.socioId !== socio.id) {
+      return NextResponse.json({ ok: false, error: 'Descuento no encontrado' }, { status: 404 })
+    }
+
+    await prisma.descuento.delete({ where: { id } })
 
     const userPayload = await validateJWT(request)
     if (userPayload) {
       await logAudit({
         usuarioId: userPayload.usuarioId,
         accion: 'ELIMINAR',
-        tabla: 'discounts',
-        registroId: parseInt(id),
-        cambioAnterior: antes,
+        tabla: 'Descuento',
+        registroId: id,
+        cambioAnterior: antes as any,
         cambioNuevo: null,
         request
       })
