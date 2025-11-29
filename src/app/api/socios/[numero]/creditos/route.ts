@@ -1,14 +1,18 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { getDb } from '@/lib/db'
+import { prisma } from '@/lib/prisma-db'
 import { validateJWT } from '@/lib/auth'
 import { logAudit } from '@/lib/audit'
 
 export async function GET(request: Request, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
-    const db = await getDb()
-    const credits = (db.data!.credits || []).filter((c: any) => String(c.numero) === String(numero))
-    return NextResponse.json({ ok: true, credits })
+    const numero = parseInt(params.numero, 10)
+    const socio = await prisma.socio.findUnique({ where: { numero } })
+    if (!socio) return NextResponse.json({ ok: true, creditos: [] })
+
+    const creditos = await prisma.credito.findMany({
+      where: { socioId: socio.id }
+    })
+    return NextResponse.json({ ok: true, creditos })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
   }
@@ -16,48 +20,36 @@ export async function GET(request: Request, { params }: { params: { numero: stri
 
 export async function POST(request: NextRequest, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
+    const numero = parseInt(params.numero, 10)
     const payload = await request.json()
-    // expected: { montoTotal, cuotas, descripcion, fechaInicio }
-    const montoTotal = Number(payload.montoTotal || 0)
-    const cuotas = Number(payload.cuotas || 1)
-    const descripcion = String(payload.descripcion || '')
-    const fechaInicio = payload.fechaInicio || new Date().toISOString()
-    const cuotaMensual = Math.round((montoTotal / Math.max(1, cuotas)) * 100) / 100
+    // expected: { monto, concepto, estado }
+    const monto = Number(payload.monto || payload.montoTotal || 0)
+    const concepto = String(payload.concepto || payload.descripcion || 'Crédito')
+    const estado = String(payload.estado || 'pendiente')
 
-    const db = await getDb()
-    const item = {
-      id: Date.now().toString(),
-      numero: String(numero),
-      montoTotal,
-      cuotas,
-      cuotaMensual,
-      descripcion,
-      fechaInicio,
-      cuotasPagadas: 0
-    }
-    if (!db.data) db.data = {
-      socios: [], cuotaConfig: {}, descuentos: [], credits: [], creditos: [],
-      pagos: [], recibos: [], transacciones: [], transactions: [], ingresos: [], egresos: [], sentEmails: []
-    } as any
-    if (!db.data.credits) db.data.credits = []
-    db.data.credits.push(item)
-    await db.write()
+    if (monto <= 0) return NextResponse.json({ ok: false, error: 'Monto inválido' }, { status: 400 })
 
-    // Log de auditoría
+    const socio = await prisma.socio.findUnique({ where: { numero } })
+    if (!socio) return NextResponse.json({ ok: false, error: 'Socio no encontrado' }, { status: 404 })
+
+    const credito = await prisma.credito.create({
+      data: { socioId: socio.id, monto, concepto, estado }
+    })
+
+    // Log auditoría
     const userPayload = await validateJWT(request)
     if (userPayload) {
       await logAudit({
         usuarioId: userPayload.usuarioId,
         accion: 'CREAR',
-        tabla: 'credits',
-        registroId: parseInt(item.id),
-        cambioNuevo: item,
+        tabla: 'Credito',
+        registroId: credito.id,
+        cambioNuevo: credito as any,
         request
       })
     }
 
-    return NextResponse.json({ ok: true, credit: item })
+    return NextResponse.json({ ok: true, credito })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
   }
@@ -65,28 +57,27 @@ export async function POST(request: NextRequest, { params }: { params: { numero:
 
 export async function PUT(request: NextRequest, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
+    const numero = parseInt(params.numero, 10)
     const payload = await request.json()
-    const id = String(payload.id || '')
+    const id = Number(payload.id || 0)
     if (!id) return NextResponse.json({ ok: false, error: 'id requerido' }, { status: 400 })
 
-    const db = await getDb()
-    const list = db.data!.credits || []
-    const idx = list.findIndex((c: any) => String(c.id) === id && String(c.numero) === String(numero))
-    if (idx === -1) return NextResponse.json({ ok: false, error: 'Credito no encontrado' }, { status: 404 })
+    const socio = await prisma.socio.findUnique({ where: { numero } })
+    if (!socio) return NextResponse.json({ ok: false, error: 'Socio no encontrado' }, { status: 404 })
 
-    const antes = { ...list[idx] }
-    const payloadMonto = payload.montoTotal
-    const payloadCuotas = payload.cuotas
-    if (payloadMonto !== undefined) list[idx].montoTotal = Number(payloadMonto)
-    if (payloadCuotas !== undefined) list[idx].cuotas = Number(payloadCuotas)
-    if (payload.montoTotal !== undefined || payload.cuotas !== undefined) {
-      list[idx].cuotaMensual = Math.round((Number(list[idx].montoTotal || 0) / Math.max(1, Number(list[idx].cuotas || 1))) * 100) / 100
+    const antes = await prisma.credito.findUnique({ where: { id } })
+    if (!antes || antes.socioId !== socio.id) {
+      return NextResponse.json({ ok: false, error: 'Crédito no encontrado' }, { status: 404 })
     }
-    if (payload.descripcion !== undefined) list[idx].descripcion = String(payload.descripcion)
-    if (payload.fechaInicio !== undefined) list[idx].fechaInicio = payload.fechaInicio
 
-    await db.write()
+    const updated = await prisma.credito.update({
+      where: { id },
+      data: {
+        monto: payload.monto !== undefined ? Number(payload.monto) : undefined,
+        concepto: payload.concepto !== undefined ? String(payload.concepto) : undefined,
+        estado: payload.estado !== undefined ? String(payload.estado) : undefined
+      }
+    })
 
     // Audit
     const userPayload = await validateJWT(request)
@@ -94,15 +85,15 @@ export async function PUT(request: NextRequest, { params }: { params: { numero: 
       await logAudit({
         usuarioId: userPayload.usuarioId,
         accion: 'EDITAR',
-        tabla: 'credits',
-        registroId: parseInt(id),
-        cambioAnterior: antes,
-        cambioNuevo: list[idx],
+        tabla: 'Credito',
+        registroId: id,
+        cambioAnterior: antes as any,
+        cambioNuevo: updated as any,
         request
       })
     }
 
-    return NextResponse.json({ ok: true, credit: list[idx] })
+    return NextResponse.json({ ok: true, credito: updated })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: String(err.message || err) }, { status: 500 })
   }
@@ -110,28 +101,29 @@ export async function PUT(request: NextRequest, { params }: { params: { numero: 
 
 export async function DELETE(request: NextRequest, { params }: { params: { numero: string } }) {
   try {
-    const numero = params.numero
+    const numero = parseInt(params.numero, 10)
     const payload = await request.json()
-    const id = String(payload.id || '')
+    const id = Number(payload.id || 0)
     if (!id) return NextResponse.json({ ok: false, error: 'id requerido' }, { status: 400 })
 
-    const db = await getDb()
-    const list = db.data!.credits || []
-    const idx = list.findIndex((c: any) => String(c.id) === id && String(c.numero) === String(numero))
-    if (idx === -1) return NextResponse.json({ ok: false, error: 'Credito no encontrado' }, { status: 404 })
+    const socio = await prisma.socio.findUnique({ where: { numero } })
+    if (!socio) return NextResponse.json({ ok: false, error: 'Socio no encontrado' }, { status: 404 })
 
-    const antes = { ...list[idx] }
-    list.splice(idx, 1)
-    await db.write()
+    const antes = await prisma.credito.findUnique({ where: { id } })
+    if (!antes || antes.socioId !== socio.id) {
+      return NextResponse.json({ ok: false, error: 'Crédito no encontrado' }, { status: 404 })
+    }
+
+    await prisma.credito.delete({ where: { id } })
 
     const userPayload = await validateJWT(request)
     if (userPayload) {
       await logAudit({
         usuarioId: userPayload.usuarioId,
         accion: 'ELIMINAR',
-        tabla: 'credits',
-        registroId: parseInt(id),
-        cambioAnterior: antes,
+        tabla: 'Credito',
+        registroId: id,
+        cambioAnterior: antes as any,
         cambioNuevo: null,
         request
       })

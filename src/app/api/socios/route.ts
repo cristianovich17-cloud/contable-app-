@@ -18,7 +18,10 @@ export async function GET(request: Request) {
       ];
     }
 
-    const socios = await prisma.socio.findMany({ where });
+    const socios = await prisma.socio.findMany({ 
+      where,
+      orderBy: { numero: 'asc' }
+    })
     return NextResponse.json({ ok: true, socios });
   } catch (e) {
     console.error('Error fetching socios', e);

@@ -49,11 +49,10 @@ export async function POST(request: NextRequest, { params }: { params: { numero:
     })
     
     // Sumar directamente los montos de los créditos pendientes
-    const installmentsDue = credits.reduce((s: number, c: any) => s + Number(c.monto || 0), 0)
+    const sumCredits = credits.reduce((s: number, c: any) => s + Number(c.monto || 0), 0)
 
     const totalDescuentos = sumDiscounts
-    const totalCreditos = installmentsDue
-    const totalAPagar = Math.max(0, cuotaAFUT - totalDescuentos + totalCreditos)
+    const totalAPagar = Math.max(0, cuotaAFUT - totalDescuentos + sumCredits)
 
     // Crear recibo
     const recibo = await prisma.recibo.create({

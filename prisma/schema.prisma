@@ -87,6 +87,7 @@ model Pago {
   creditoId Int?
   credito   Credito? @relation(fields: [creditoId], references: [id], onDelete: SetNull)
   monto     Float
+  concepto  String?
   fecha     DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
