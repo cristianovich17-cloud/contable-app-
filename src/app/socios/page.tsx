@@ -49,21 +49,7 @@ const SociosPage = () => {
     }
   }, [user, authLoading, router])
 
-  // Adjuntar listener manualmente al botón de importación
-  useEffect(() => {
-    if (importButtonRef.current && handleImport) {
-      const handler = () => {
-        handleImport()
-      }
-      importButtonRef.current.addEventListener('click', handler)
-      return () => {
-        if (importButtonRef.current) {
-          importButtonRef.current.removeEventListener('click', handler)
-        }
-      }
-    }
-  }, [handleImport])
-
+  // Definir fetchSocios primero (sin dependencias)
   const fetchSocios = useCallback(async () => {
     setLoading(true)
     try {
@@ -77,44 +63,7 @@ const SociosPage = () => {
     }
   }, [])
 
-  const fetchCuotaConfig = useCallback(async () => {
-    try {
-      const res = await fetch('/api/config/cuotas')
-      const data = await res.json()
-      if (data.ok && data.cuotaConfig) {
-        setCuotaBienestar(Number(data.cuotaConfig.bienestar || 0))
-        setCuotaOrdinaria(Number(data.cuotaConfig.ordinaria || 0))
-      }
-    } catch (err) {
-      // ignore
-    }
-  }, [])
-
-  const fetchSentEmails = useCallback(async () => {
-    try {
-      const res = await fetch('/api/socios/sent-emails')
-      const data = await res.json()
-      if (data.ok) setSentEmails(data.sent || [])
-    } catch (_) {}
-  }, [])
-
-  useEffect(() => {
-    // Ejecutar en paralelo
-    Promise.all([
-      fetchSocios(),
-      fetchCuotaConfig(),
-      fetchSentEmails()
-    ])
-  }, [fetchSocios, fetchCuotaConfig, fetchSentEmails])
-
-  async function fetchWorkerStatus() {
-    try {
-      const r = await fetch('/api/worker/status')
-      const j = await r.json()
-      setWorkerRunning(Boolean(j.running))
-    } catch (_) {}
-  }
-
+  // Definir handleImport ANTES de usarlo en el useEffect del listener
   const handleImport = useCallback(() => {
     if (!fileRef.current) {
       alert('Error: referencia de archivo inválida')
@@ -155,6 +104,59 @@ const SociosPage = () => {
         alert(`❌ Error: ${err.message}`)
       })
   }, [fetchSocios])
+
+  // Ahora sí puedo usar handleImport en el useEffect
+  useEffect(() => {
+    if (importButtonRef.current) {
+      const handler = () => {
+        handleImport()
+      }
+      importButtonRef.current.addEventListener('click', handler)
+      return () => {
+        if (importButtonRef.current) {
+          importButtonRef.current.removeEventListener('click', handler)
+        }
+      }
+    }
+  }, [handleImport])
+
+  const fetchCuotaConfig = useCallback(async () => {
+    try {
+      const res = await fetch('/api/config/cuotas')
+      const data = await res.json()
+      if (data.ok && data.cuotaConfig) {
+        setCuotaBienestar(Number(data.cuotaConfig.bienestar || 0))
+        setCuotaOrdinaria(Number(data.cuotaConfig.ordinaria || 0))
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, [])
+
+  const fetchSentEmails = useCallback(async () => {
+    try {
+      const res = await fetch('/api/socios/sent-emails')
+      const data = await res.json()
+      if (data.ok) setSentEmails(data.sent || [])
+    } catch (_) {}
+  }, [])
+
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    Promise.all([
+      fetchSocios(),
+      fetchCuotaConfig(),
+      fetchSentEmails()
+    ])
+  }, [fetchSocios, fetchCuotaConfig, fetchSentEmails])
+
+  async function fetchWorkerStatus() {
+    try {
+      const r = await fetch('/api/worker/status')
+      const j = await r.json()
+      setWorkerRunning(Boolean(j.running))
+    } catch (_) {}
+  }
 
   async function handleDeleteSocio(socio: Socio) {
     if (!confirm(`¿Estás seguro de que quieres eliminar a ${socio.nombre}?\n\nEsta acción no se puede deshacer.`)) {
