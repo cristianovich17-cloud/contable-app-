@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { calcularCuotaAFUT, formatCurrency } from '@/lib/cuotas'
 import { useAuth } from '@/hooks/useAuth'
@@ -51,7 +51,7 @@ const SociosPage = () => {
 
   // Adjuntar listener manualmente al botón de importación
   useEffect(() => {
-    if (importButtonRef.current) {
+    if (importButtonRef.current && handleImport) {
       const handler = () => {
         handleImport()
       }
@@ -62,9 +62,9 @@ const SociosPage = () => {
         }
       }
     }
-  }, [])
+  }, [handleImport])
 
-  async function fetchSocios() {
+  const fetchSocios = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/socios')
@@ -75,9 +75,9 @@ const SociosPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  async function fetchCuotaConfig() {
+  const fetchCuotaConfig = useCallback(async () => {
     try {
       const res = await fetch('/api/config/cuotas')
       const data = await res.json()
@@ -88,7 +88,15 @@ const SociosPage = () => {
     } catch (err) {
       // ignore
     }
-  }
+  }, [])
+
+  const fetchSentEmails = useCallback(async () => {
+    try {
+      const res = await fetch('/api/socios/sent-emails')
+      const data = await res.json()
+      if (data.ok) setSentEmails(data.sent || [])
+    } catch (_) {}
+  }, [])
 
   useEffect(() => {
     // Ejecutar en paralelo
@@ -97,15 +105,7 @@ const SociosPage = () => {
       fetchCuotaConfig(),
       fetchSentEmails()
     ])
-  }, [])
-
-  async function fetchSentEmails() {
-    try {
-      const res = await fetch('/api/socios/sent-emails')
-      const data = await res.json()
-      if (data.ok) setSentEmails(data.sent || [])
-    } catch (_) {}
-  }
+  }, [fetchSocios, fetchCuotaConfig, fetchSentEmails])
 
   async function fetchWorkerStatus() {
     try {
@@ -115,7 +115,7 @@ const SociosPage = () => {
     } catch (_) {}
   }
 
-  function handleImport() {
+  const handleImport = useCallback(() => {
     if (!fileRef.current) {
       alert('Error: referencia de archivo inválida')
       return
@@ -138,9 +138,10 @@ const SociosPage = () => {
       .then(data => {
         if (data.ok) {
           alert(`✅ Importación exitosa!\n\n${data.addedCount} socios importados`)
+          // Llamar fetchSocios después de un pequeño delay
           setTimeout(() => {
             fetchSocios()
-          }, 100)
+          }, 200)
           if (fileRef.current) fileRef.current.value = ''
         } else {
           let msg = data.error || 'Error desconocido'
@@ -153,7 +154,7 @@ const SociosPage = () => {
       .catch(err => {
         alert(`❌ Error: ${err.message}`)
       })
-  }
+  }, [fetchSocios])
 
   async function handleDeleteSocio(socio: Socio) {
     if (!confirm(`¿Estás seguro de que quieres eliminar a ${socio.nombre}?\n\nEsta acción no se puede deshacer.`)) {
