@@ -45,8 +45,10 @@ export default function LoginPage() {
         return;
       }
 
+      // Guardar token en localStorage
       localStorage.setItem('authToken', data.data.token);
       localStorage.setItem('user', JSON.stringify(data.data.usuario));
+      
       router.push('/socios');
     } catch (err) {
       setError('Error de conexión');

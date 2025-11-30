@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       data: { lastLogin: new Date() },
     });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         ok: true,
         data: {
@@ -78,6 +78,17 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    // Establecer cookie con el token (7 días)
+    response.cookies.set('authToken', token, {
+      httpOnly: false, // Accesible desde JS para localStorage también
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60, // 7 días
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Error en POST /api/auth/login:', error);
     return NextResponse.json(

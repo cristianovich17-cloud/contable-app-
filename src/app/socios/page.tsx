@@ -52,9 +52,7 @@ const SociosPage = () => {
   // Adjuntar listener manualmente al botón de importación
   useEffect(() => {
     if (importButtonRef.current) {
-      console.log('[Frontend] Attaching click listener to import button')
       const handler = () => {
-        console.log('[Frontend] Manual listener TRIGGERED!')
         handleImport()
       }
       importButtonRef.current.addEventListener('click', handler)
@@ -67,18 +65,16 @@ const SociosPage = () => {
   }, [])
 
   async function fetchSocios() {
-    console.log('[Frontend] fetchSocios called')
     setLoading(true)
     try {
       const res = await fetch('/api/socios')
       const data = await res.json()
-      console.log('[Frontend] fetchSocios response:', data)
       setSocios(data.socios || [])
-      console.log('[Frontend] Socios set to:', data.socios?.length || 0, 'items')
     } catch (err) {
-      console.error('[Frontend] fetchSocios error:', err)
+      console.error('fetchSocios error:', err)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   async function fetchCuotaConfig() {
@@ -95,9 +91,12 @@ const SociosPage = () => {
   }
 
   useEffect(() => {
-    fetchSocios()
-    fetchCuotaConfig()
-    fetchSentEmails()
+    // Ejecutar en paralelo
+    Promise.all([
+      fetchSocios(),
+      fetchCuotaConfig(),
+      fetchSentEmails()
+    ])
   }, [])
 
   async function fetchSentEmails() {
@@ -117,46 +116,29 @@ const SociosPage = () => {
   }
 
   function handleImport() {
-    console.log('[Frontend] === handleImport CALLED ===')
-    console.log('[Frontend] fileRef.current:', fileRef.current)
-    
     if (!fileRef.current) {
-      console.error('[Frontend] fileRef is null!')
       alert('Error: referencia de archivo inválida')
       return
     }
 
     if (!fileRef.current.files || fileRef.current.files.length === 0) {
-      console.warn('[Frontend] No files selected')
       alert('Por favor selecciona un archivo Excel')
       return
     }
 
     const file = fileRef.current.files[0]
-    console.log('[Frontend] File selected:', file.name, `(${file.size} bytes)`)
-
     const formData = new FormData()
     formData.append('file', file)
-
-    console.log('[Frontend] Sending POST to /api/socios/import')
 
     fetch('/api/socios/import', {
       method: 'POST',
       body: formData
     })
-      .then(res => {
-        console.log('[Frontend] Got response, status:', res.status)
-        return res.json()
-      })
+      .then(res => res.json())
       .then(data => {
-        console.log('[Frontend] Response JSON:', data)
-        
         if (data.ok) {
-          console.log('[Frontend] Import successful, calling fetchSocios')
           alert(`✅ Importación exitosa!\n\n${data.addedCount} socios importados`)
-          // Usar setTimeout para asegurar que se ejecuta después
           setTimeout(() => {
-            console.log('[Frontend] Executing fetchSocios after import')
             fetchSocios()
           }, 100)
           if (fileRef.current) fileRef.current.value = ''
@@ -169,7 +151,6 @@ const SociosPage = () => {
         }
       })
       .catch(err => {
-        console.error('[Frontend] Fetch error:', err)
         alert(`❌ Error: ${err.message}`)
       })
   }

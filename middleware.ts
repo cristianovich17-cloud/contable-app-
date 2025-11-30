@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateJWT } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
 /**
  * Rutas públicas que no requieren autenticación
@@ -20,6 +20,28 @@ const roleBasedRoutes: Record<string, string[]> = {
   '/api/auditoria': ['admin'],
 };
 
+/**
+ * Extraer token del header Authorization o cookie
+ */
+function getToken(request: NextRequest): string | null {
+  // Primero intenta desde header Authorization
+  const authHeader = request.headers.get('authorization');
+  if (authHeader) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      return parts[1];
+    }
+  }
+
+  // Luego intenta desde cookie
+  const cookieToken = request.cookies.get('authToken')?.value;
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  return null;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -28,8 +50,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Validar JWT en rutas protegidas
-  const payload = await validateJWT(request);
+  // Obtener token
+  const token = getToken(request);
+  
+  // Validar token
+  let payload = null;
+  if (token) {
+    payload = verifyToken(token);
+  }
 
   if (!payload) {
     // Si es API, retornar error
