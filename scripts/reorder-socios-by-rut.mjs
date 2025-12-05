@@ -25,10 +25,11 @@ async function reorderSociosByRUT() {
     // Ordenar por RUT (menor a mayor)
     console.log('\n🔄 Ordenando por RUT...')
     const sortedByRUT = [...socios].sort((a, b) => {
-      // Normalizar RUTs para comparación numérica
-      const rutA = parseInt(a.rut.replace(/[^0-9]/g, ''), 10)
-      const rutB = parseInt(b.rut.replace(/[^0-9]/g, ''), 10)
-      return rutA - rutB
+      // Extraer número del RUT antes del guion
+      const numA = parseInt(a.rut.split('-')[0], 10)
+      const numB = parseInt(b.rut.split('-')[0], 10)
+      // Comparar números directamente (esto ordena 6293643 antes que 12692030)
+      return numA - numB
     })
 
     console.log('\n✅ Socios después de ordenar por RUT:')
