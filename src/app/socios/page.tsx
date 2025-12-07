@@ -7,12 +7,16 @@ import { calcularCuotaAFUT, formatCurrency } from '@/lib/cuotas'
 import { useAuth } from '@/hooks/useAuth'
 
 type Socio = {
-  numero: string
+  numero: number
   rut: string
   nombre: string
   email?: string
   estado?: string
   calidadJuridica?: string
+  id?: number
+  telefono?: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 const SociosPage = () => {
@@ -163,7 +167,7 @@ const SociosPage = () => {
       return
     }
 
-    setLoadingAction(prev => ({ ...prev, [socio.numero]: true }))
+    setLoadingAction(prev => ({ ...prev, [String(socio.numero)]: true }))
     try {
       const res = await fetch(`/api/socios/${socio.numero}`, {
         method: 'DELETE'
@@ -178,17 +182,18 @@ const SociosPage = () => {
     } catch (err: any) {
       alert(`❌ Error al eliminar: ${err.message}`)
     } finally {
-      setLoadingAction(prev => ({ ...prev, [socio.numero]: false }))
+      setLoadingAction(prev => ({ ...prev, [String(socio.numero)]: false }))
     }
   }
 
-  function toggleSocioSelection(numero: string) {
+  function toggleSocioSelection(numero: number) {
+    const key = String(numero)
     setSelectedSocios(prev => {
       const newSet = new Set(prev)
-      if (newSet.has(numero)) {
-        newSet.delete(numero)
+      if (newSet.has(key)) {
+        newSet.delete(key)
       } else {
-        newSet.add(numero)
+        newSet.add(key)
       }
       return newSet
     })
@@ -198,7 +203,7 @@ const SociosPage = () => {
     if (selectedSocios.size === socios.length) {
       setSelectedSocios(new Set())
     } else {
-      setSelectedSocios(new Set(socios.map(s => s.numero)))
+      setSelectedSocios(new Set(socios.map(s => String(s.numero))))
     }
   }
 
@@ -461,11 +466,11 @@ const SociosPage = () => {
             </thead>
             <tbody className="text-gray-200">
               {socios.map((s) => (
-                <tr key={s.rut + s.numero} className={`border-t border-gray-700 hover:bg-gray-800 ${selectedSocios.has(s.numero) ? 'bg-gray-700' : ''}`}>
+                <tr key={s.rut + s.numero} className={`border-t border-gray-700 hover:bg-gray-800 ${selectedSocios.has(String(s.numero)) ? 'bg-gray-700' : ''}`}>
                   <td className="py-3 px-4 w-8">
                     <input
                       type="checkbox"
-                      checked={selectedSocios.has(s.numero)}
+                      checked={selectedSocios.has(String(s.numero))}
                       onChange={() => toggleSocioSelection(s.numero)}
                       className="w-4 h-4 cursor-pointer"
                     />
@@ -481,7 +486,7 @@ const SociosPage = () => {
                       <button
                         onClick={async () => {
                           // toggle discount form
-                          setDiscountForms(prev => ({ ...prev, [s.numero]: prev[s.numero] ? undefined as any : { monto: 0, concepto: '', mes: cuotaMes, año: cuotaAño } }))
+                          setDiscountForms(prev => ({ ...prev, [String(s.numero)]: prev[String(s.numero)] ? undefined as any : { monto: 0, concepto: '', mes: cuotaMes, año: cuotaAño } }))
                         }}
                         className="bg-yellow-400 text-black px-2 py-1 rounded text-sm"
                       >
@@ -490,7 +495,7 @@ const SociosPage = () => {
                       <button
                         onClick={async () => {
                           // toggle credit form
-                          setCreditForms(prev => ({ ...prev, [s.numero]: prev[s.numero] ? undefined as any : { montoTotal: 0, cuotas: 1, descripcion: '' } }))
+                          setCreditForms(prev => ({ ...prev, [String(s.numero)]: prev[String(s.numero)] ? undefined as any : { montoTotal: 0, cuotas: 1, descripcion: '' } }))
                         }}
                         className="bg-orange-500 text-white px-2 py-1 rounded text-sm"
                       >
@@ -499,7 +504,7 @@ const SociosPage = () => {
                       <button
                         onClick={async () => {
                           // generate receipt
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: true }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: true }))
                           try {
                             const res = await fetch(`/api/socios/${s.numero}/recibos`, { method: 'POST' })
                             const data = await res.json()
@@ -511,7 +516,7 @@ const SociosPage = () => {
                           } catch (err) {
                             alert('Error generando recibo')
                           }
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: false }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: false }))
                         }}
                         className="bg-green-600 text-white px-2 py-1 rounded text-sm"
                       >
@@ -520,11 +525,11 @@ const SociosPage = () => {
                       <button
                         onClick={async () => {
                           // toggle payment form and fetch credits
-                          setPaymentForms(prev => ({ ...prev, [s.numero]: prev[s.numero] ? undefined as any : { amount: 0, tipo: 'Cuota' } }))
+                          setPaymentForms(prev => ({ ...prev, [String(s.numero)]: prev[String(s.numero)] ? undefined as any : { amount: 0, tipo: 'Cuota' } }))
                           try {
                             const res = await fetch(`/api/socios/${s.numero}/creditos`)
                             const data = await res.json()
-                            if (data.ok) setCreditsCache(prev => ({ ...prev, [s.numero]: data.credits || [] }))
+                            if (data.ok) setCreditsCache(prev => ({ ...prev, [String(s.numero)]: data.credits || [] }))
                           } catch (_) {}
                         }}
                         className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
@@ -534,7 +539,7 @@ const SociosPage = () => {
                         <button
                           onClick={async () => {
                             // toggle boleta form
-                            setBoletaForms(prev => ({ ...prev, [s.numero]: prev[s.numero] ? undefined as any : { mes: new Date().getMonth() + 1, año: new Date().getFullYear(), email: s.email || '' } }))
+                            setBoletaForms(prev => ({ ...prev, [String(s.numero)]: prev[String(s.numero)] ? undefined as any : { mes: new Date().getMonth() + 1, año: new Date().getFullYear(), email: s.email || '' } }))
                           }}
                           className="bg-purple-600 text-white px-2 py-1 rounded text-sm"
                         >
@@ -542,79 +547,79 @@ const SociosPage = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteSocio(s)}
-                          disabled={loadingAction[s.numero]}
+                          disabled={loadingAction[String(s.numero)]}
                           className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm disabled:opacity-50"
                         >
-                          {loadingAction[s.numero] ? 'Eliminando...' : '🗑️ Eliminar'}
+                          {loadingAction[String(s.numero)] ? 'Eliminando...' : '🗑️ Eliminar'}
                         </button>
                     </div>
 
                     {/* Discount form */}
-                    {discountForms[s.numero] && (
+                    {discountForms[String(s.numero)] && (
                       <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
-                        <input type="number" placeholder="Monto" value={discountForms[s.numero].monto} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], monto: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-32 text-sm" />
-                        <input placeholder="Concepto" value={discountForms[s.numero].concepto} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], concepto: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
-                        <input type="number" placeholder="Mes" min="1" max="12" value={discountForms[s.numero].mes} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], mes: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-20 text-sm" />
-                        <input type="number" placeholder="Año" value={discountForms[s.numero].año} onChange={e => setDiscountForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], año: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
+                        <input type="number" placeholder="Monto" value={discountForms[String(s.numero)].monto} onChange={e => setDiscountForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], monto: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-32 text-sm" />
+                        <input placeholder="Concepto" value={discountForms[String(s.numero)].concepto} onChange={e => setDiscountForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], concepto: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
+                        <input type="number" placeholder="Mes" min="1" max="12" value={discountForms[String(s.numero)].mes} onChange={e => setDiscountForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], mes: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-20 text-sm" />
+                        <input type="number" placeholder="Año" value={discountForms[String(s.numero)].año} onChange={e => setDiscountForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], año: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
                         <button onClick={async () => {
-                          const f = discountForms[s.numero]
+                          const f = discountForms[String(s.numero)]
                           if (!f) return
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: true }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: true }))
                           try {
                             const res = await fetch(`/api/socios/${s.numero}/descuentos`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(f) })
                             const data = await res.json()
                             if (data.ok) {
                               alert('Descuento añadido')
-                              setDiscountForms(prev => ({ ...prev, [s.numero]: undefined as any }))
+                              setDiscountForms(prev => ({ ...prev, [String(s.numero)]: undefined as any }))
                             } else alert('Error: ' + (data.error || ''))
                           } catch (err) { alert('Error agregando descuento') }
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: false }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: false }))
                         }} className="bg-indigo-600 text-white px-2 py-1 rounded text-sm">Añadir</button>
                       </div>
                     )}
 
                     {/* Credit form */}
-                    {creditForms[s.numero] && (
+                    {creditForms[String(s.numero)] && (
                       <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
-                        <input type="number" placeholder="Monto total" value={creditForms[s.numero].montoTotal} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], montoTotal: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-36 text-sm" />
-                        <input type="number" placeholder="Cuotas" value={creditForms[s.numero].cuotas} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], cuotas: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
-                        <input placeholder="Descripción" value={creditForms[s.numero].descripcion} onChange={e => setCreditForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], descripcion: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
+                        <input type="number" placeholder="Monto total" value={creditForms[String(s.numero)].montoTotal} onChange={e => setCreditForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], montoTotal: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-36 text-sm" />
+                        <input type="number" placeholder="Cuotas" value={creditForms[String(s.numero)].cuotas} onChange={e => setCreditForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], cuotas: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
+                        <input placeholder="Descripción" value={creditForms[String(s.numero)].descripcion} onChange={e => setCreditForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], descripcion: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
                         <button onClick={async () => {
-                          const f = creditForms[s.numero]
+                          const f = creditForms[String(s.numero)]
                           if (!f) return
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: true }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: true }))
                           try {
                             const res = await fetch(`/api/socios/${s.numero}/creditos`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(f) })
                             const data = await res.json()
                             if (data.ok) {
                               alert('Crédito añadido')
-                              setCreditForms(prev => ({ ...prev, [s.numero]: undefined as any }))
+                              setCreditForms(prev => ({ ...prev, [String(s.numero)]: undefined as any }))
                             } else alert('Error: ' + (data.error || ''))
                           } catch (err) { alert('Error agregando crédito') }
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: false }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: false }))
                         }} className="bg-indigo-600 text-white px-2 py-1 rounded text-sm">Añadir</button>
                       </div>
                     )}
 
                     {/* Payment form */}
-                    {paymentForms[s.numero] && (
+                    {paymentForms[String(s.numero)] && (
                       <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
-                        <input type="number" placeholder="Monto" value={paymentForms[s.numero].amount} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], amount: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-32 text-sm" />
-                        <select value={paymentForms[s.numero].tipo} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], tipo: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
+                        <input type="number" placeholder="Monto" value={paymentForms[String(s.numero)].amount} onChange={e => setPaymentForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], amount: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-32 text-sm" />
+                        <select value={paymentForms[String(s.numero)].tipo} onChange={e => setPaymentForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], tipo: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
                           <option className="bg-gray-700 text-white">Cuota</option>
                           <option className="bg-gray-700 text-white">Credito</option>
                           <option className="bg-gray-700 text-white">Otro</option>
                         </select>
-                        <select value={paymentForms[s.numero].creditId || ''} onChange={e => setPaymentForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], creditId: e.target.value || undefined } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
+                        <select value={paymentForms[String(s.numero)].creditId || ''} onChange={e => setPaymentForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], creditId: e.target.value || undefined } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
                           <option value="">(Sin crédito)</option>
-                          {(creditsCache[s.numero] || []).map(c => (
+                          {(creditsCache[String(s.numero)] || []).map(c => (
                             <option key={c.id} value={c.id}>{`Crédito ${c.id} - cuota ${c.cuotaMensual}`}</option>
                           ))}
                         </select>
                         <button onClick={async () => {
-                          const f = paymentForms[s.numero]
+                          const f = paymentForms[String(s.numero)]
                           if (!f) return
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: true }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: true }))
                           try {
                             const body: any = { amount: f.amount, tipo: f.tipo }
                             if (f.creditId) body.creditId = f.creditId
@@ -622,35 +627,35 @@ const SociosPage = () => {
                             const data = await res.json()
                             if (data.ok) {
                               alert('Pago registrado')
-                              setPaymentForms(prev => ({ ...prev, [s.numero]: undefined as any }))
+                              setPaymentForms(prev => ({ ...prev, [String(s.numero)]: undefined as any }))
                               // refresh credits cache
                               const r = await fetch(`/api/socios/${s.numero}/creditos`)
                               const rr = await r.json()
-                              if (rr.ok) setCreditsCache(prev => ({ ...prev, [s.numero]: rr.credits || [] }))
+                              if (rr.ok) setCreditsCache(prev => ({ ...prev, [String(s.numero)]: rr.credits || [] }))
                             } else alert('Error: ' + (data.error || ''))
                           } catch (err) { alert('Error registrando pago') }
-                          setLoadingAction(prev => ({ ...prev, [s.numero]: false }))
+                          setLoadingAction(prev => ({ ...prev, [String(s.numero)]: false }))
                         }} className="bg-indigo-600 text-white px-2 py-1 rounded text-sm">Registrar</button>
                       </div>
                     )}
 
                       {/* Boleta form */}
-                      {boletaForms[s.numero] && (
+                      {boletaForms[String(s.numero)] && (
                         <div className="mt-2 p-2 border border-gray-700 rounded bg-gray-800">
-                          <select value={boletaForms[s.numero].mes} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], mes: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
+                          <select value={boletaForms[String(s.numero)].mes} onChange={e => setBoletaForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], mes: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm">
                             {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                               <option key={m} value={m} className="bg-gray-700 text-white">{['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][m - 1]}</option>
                             ))}
                           </select>
-                          <input type="number" placeholder="Año" value={boletaForms[s.numero].año} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], año: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
-                          <input type="email" placeholder="Email" value={boletaForms[s.numero].email} onChange={e => setBoletaForms(prev => ({ ...prev, [s.numero]: { ...prev[s.numero], email: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
+                          <input type="number" placeholder="Año" value={boletaForms[String(s.numero)].año} onChange={e => setBoletaForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], año: Number(e.target.value) } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 w-24 text-sm" />
+                          <input type="email" placeholder="Email" value={boletaForms[String(s.numero)].email} onChange={e => setBoletaForms(prev => ({ ...prev, [String(s.numero)]: { ...prev[String(s.numero)], email: e.target.value } }))} className="border border-gray-600 bg-gray-700 text-white px-2 py-1 rounded mr-2 text-sm" />
                           <button onClick={async () => {
-                            const f = boletaForms[s.numero]
+                            const f = boletaForms[String(s.numero)]
                             if (!f || !f.email) {
                               alert('Por favor completa todos los campos')
                               return
                             }
-                            setLoadingAction(prev => ({ ...prev, [s.numero]: true }))
+                            setLoadingAction(prev => ({ ...prev, [String(s.numero)]: true }))
                             try {
                               const res = await fetch(`/api/socios/${s.numero}/enviar-boleta`, { 
                                 method: 'POST', 
@@ -660,10 +665,10 @@ const SociosPage = () => {
                               const data = await res.json()
                               if (data.success) {
                                 alert(`Boleta enviada exitosamente a ${f.email}\nDescuentos: ${data.descuentos?.cantidad || 0} - Total: $${data.descuentos?.total || 0}`)
-                                setBoletaForms(prev => ({ ...prev, [s.numero]: undefined as any }))
+                                setBoletaForms(prev => ({ ...prev, [String(s.numero)]: undefined as any }))
                               } else alert('Error: ' + (data.error || 'Error desconocido'))
                             } catch (err) { alert('Error enviando boleta') }
-                            setLoadingAction(prev => ({ ...prev, [s.numero]: false }))
+                            setLoadingAction(prev => ({ ...prev, [String(s.numero)]: false }))
                           }} className="bg-indigo-600 text-white px-2 py-1 rounded text-sm">Enviar</button>
                         </div>
                       )}
